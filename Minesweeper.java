@@ -226,7 +226,8 @@ public class Minesweeper {
           if (dead == true) {
             for (int r = 0; r < Driver.row; r++) {
               for (int c = 0; c < Driver.col; c++) {
-                if ((r >= row - 1 && r <= row + 1 && c >= col - 1 && c <= col + 1) == false)
+                if ((r >= row - 1 && r <= row + 1 && c >= col - 1 && c <= col + 1) == false &&
+                    state[r][c].equals("flagged") == false)
                   state[r][c] = "uncovered";
               }
             }

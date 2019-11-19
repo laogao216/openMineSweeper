@@ -5,7 +5,7 @@ import java.util.Random;
 import processing.core.PApplet;
 import processing.core.PImage;
 
-/*
+/**
  * This class processes and executes user inputs passed from Driver
  * 
  * @author laogao216
@@ -26,7 +26,7 @@ public class Minesweeper {
   // private final static String DEAD = "dead *~*";
   // private final static String WIN = "victory ^o^";
 
-  /*
+  /**
    * initialize processing as PApplet and initialize the game setup
    * 
    * @param processing - the PApplet to be used here
@@ -36,7 +36,7 @@ public class Minesweeper {
     initGame();
   }
 
-  /*
+  /**
    * initializes the game setup
    */
   private void initGame() {
@@ -45,7 +45,7 @@ public class Minesweeper {
     initState();
   }
 
-  /*
+  /**
    * load 16*16 images that represent a single square to private PImage fields
    */
   private void loadImages() {
@@ -61,7 +61,7 @@ public class Minesweeper {
     blank = processing.loadImage("images" + File.separator + "blank.png");
   }
 
-  /*
+  /**
    * randomize mine locations and generate a number map around mines, stored in int array key
    */
   private void genKey() {
@@ -107,7 +107,7 @@ public class Minesweeper {
     }
   }
 
-  /*
+  /**
    * generate a random int between 0 (inclusive) and bound (exclusive)
    * 
    * @param bound - the int that the max return value is one fewer
@@ -122,7 +122,7 @@ public class Minesweeper {
     return output;
   }
 
-  /*
+  /**
    * initialize String array state[row][col] over every individual square to "covered"
    */
   private void initState() {
@@ -133,7 +133,7 @@ public class Minesweeper {
     }
   }
 
-  /*
+  /**
    * called by Driver.draw continuously. process user inputs by altering the state of each square
    * 
    * @param mouseX - x coordinate of location of the mouse
@@ -254,7 +254,7 @@ public class Minesweeper {
     draw();
   }
 
-  /*
+  /**
    * checks if unflagged mine is uncovered, which causes death
    * 
    * @param row - the row index of the square in question
@@ -274,7 +274,7 @@ public class Minesweeper {
     return true;
   }
 
-  /*
+  /**
    * post mortem operations: change states of badFlags and triggeredMines to show cause of death
    * 
    * @param row - the row index of the square in question
@@ -290,7 +290,7 @@ public class Minesweeper {
       state[row][col] = "uncovered";
   }
 
-  /*
+  /**
    * continuously output the current game progress, executes user inputs based on the state of each
    * individual square
    */
@@ -321,14 +321,14 @@ public class Minesweeper {
     }
   }
 
-  /*
+  /**
    * print method for debugging
    */
   private static void p(Object a) {
     System.out.print(a);
   }
 
-  /*
+  /**
    * println method for debugging
    */
   private static void pln(Object a) {

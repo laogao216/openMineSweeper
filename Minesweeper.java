@@ -60,7 +60,7 @@ public class Minesweeper {
       if (row < 0) {
         row = row * -1;
       }
-      int col = random.nextInt() % Driver.row;
+      int col = random.nextInt() % Driver.col;
       if (col < 0) {
         col = col * -1;
       }

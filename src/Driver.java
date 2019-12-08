@@ -3,13 +3,13 @@
 import processing.core.PApplet;
 
 /**
- * The driver application for Minesweeper
+ * the driver application for Minesweeper
  * 
  * @author laogao216
  */
 public class Driver extends PApplet {
 
-  // TODO - for future developments: prompt user for the following three fields
+  // TODO - prompt user for the following three fields
   public static int row = 50;
   public static int col = 50;
   public static int mineCount = 500;
@@ -25,21 +25,30 @@ public class Driver extends PApplet {
 
   /**
    * set up window dimension
+   * 
+   * @see https://processing.org/reference/settings_.html
    */
+  @Override
   public void settings() {
     size(row * 16 + 1, col * 16 + 1);
   }
 
   /**
    * calling Minesweeper constructor with PApplet processing
+   * 
+   * @see https://processing.org/reference/setup_.html
    */
+  @Override
   public void setup() {
     pen = new Minesweeper(this);
   }
 
   /**
    * send user actions to Minesweeper class
+   * 
+   * @see https://processing.org/reference/draw_.html
    */
+  @Override
   public void draw() {
     pen.update(mouseX, mouseY, mousePressed, mouseButton);
   }

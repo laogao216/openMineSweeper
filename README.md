@@ -1,2 +1,2 @@
-# openMinesweeper
-minesweeper on java, made with processing library
+# openMineSweeper
+minesweeper made with Eclipse and processing library core

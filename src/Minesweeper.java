@@ -22,12 +22,12 @@ public class Minesweeper {
   private int[][] key = new int[Driver.row][Driver.col];
   // represents game board. Value: 1 ~ 8 for normal squares, 9 for mine squares
   private String[][] state = new String[Driver.row][Driver.col];
-  // represents game progress. controls what is displayed on each square
-  private boolean gameOver = false;
-  // TODO - for future developments: add mines left, message, and new game button
-  // private final static String ALIVE = "alive ^-^";
-  // private final static String gameOver = "gameOver *~*";
-  // private final static String WIN = "victory ^o^";
+  // represents game progress. controls which image is displayed on each square
+  private String alive = "alive ^-^";
+  private String gameOver = "gameOver *~*";
+  private String victory = "victory ^o^";
+  private String gameState = alive;
+  // TODO - add mines left, message, and new game button
 
   /**
    * initialize processing as PApplet and initialize the game setup
@@ -36,7 +36,7 @@ public class Minesweeper {
    */
   public Minesweeper(PApplet processing) {
     this.processing = processing;
-    // load images
+    // load images:
     for (int i = 0; i < 9; i++) {
       String name = "images" + File.separator + Integer.toString(i) + ".png";
       PImage image = processing.loadImage(name);
@@ -47,7 +47,7 @@ public class Minesweeper {
     mine = processing.loadImage("images" + File.separator + "mine.png");
     triggeredMine = processing.loadImage("images" + File.separator + "triggered_mine.png");
     blank = processing.loadImage("images" + File.separator + "blank.png");
-    // populate key
+    // populate key:
     boolean[][] seatAvailable = new boolean[Driver.row][Driver.col];
     for (int row = 0; row < Driver.row; row++) {
       for (int col = 0; col < Driver.col; col++) {
@@ -85,13 +85,13 @@ public class Minesweeper {
         }
       }
     }
-    // initialize state to "covered" for each square
+    // initialize state to "covered" for each square:
     for (int row = 0; row < Driver.row; row++) {
       for (int col = 0; col < Driver.col; col++) {
         state[row][col] = "covered";
       }
     }
-    // draw the initialized game, ready for player action
+    // draw the initialized game:
     draw();
   }
 
@@ -105,73 +105,107 @@ public class Minesweeper {
    *                     39
    */
   public void update(int mouseX, int mouseY, boolean mousePressed, int mouseButton) {
-    // TODO - if covered = mines left, flag all
-    if (gameOver == false && mousePressed == true && mouseX > 0 && mouseX < Driver.row * 16 + 1
-        && mouseY > 0 && mouseY < Driver.col * 16 + 1) {
-      // TODO - restart game if first move does not have key == 0
+    if (gameState.equals(alive) && mousePressed == true && mouseX > 0
+        && mouseX < Driver.row * 16 + 1 && mouseY > 0 && mouseY < Driver.col * 16 + 1) {
+      // TODO - restart game if first uncovered square does not have key == 0
       int row = (mouseX - 1) / 16;
       int col = (mouseY - 1) / 16;
       int neighbor[][] = neighbors(row, col);
-      if (key[row][col] == 9 && mouseButton == 37 && state[row][col].equals("covered")) {
-        gameOver = true;
-        state[row][col] = "triggeredMine";
-        for (int r = 0; r < Driver.row; r++) {
-          for (int c = 0; c < Driver.col; c++) {
-            if (state[r][c].equals("flagged") && key[r][c] != 9) {
-              state[r][c] = "badFlag";
-            } else if (state[r][c].equals("flagged") == false
-                && state[r][c].equals("triggeredMine") == false) {
-              state[r][c] = "uncovered";
+      // process mouse left click:
+      if (mouseButton == 37) {
+        if (key[row][col] != 9 && state[row][col].equals("flagged") == false) {
+          state[row][col] = "uncovered";
+          // TODO - uncover continuously with a recursive
+        }
+        if (key[row][col] == 9 && state[row][col].equals("covered")) {
+          gameState = gameOver;
+          state[row][col] = "triggeredMine";
+          for (int r = 0; r < Driver.row; r++) {
+            for (int c = 0; c < Driver.col; c++) {
+              if (state[r][c].equals("flagged") && key[r][c] != 9) {
+                state[r][c] = "badFlag";
+              } else if (state[r][c].equals("flagged") == false
+                  && state[r][c].equals("triggeredMine") == false) {
+                state[r][c] = "uncovered";
+              }
             }
           }
         }
       }
-      if (key[row][col] != 9 && mouseButton == 37 && state[row][col].equals("flagged") == false) {
-        state[row][col] = "uncovered";
-        // FIXME - uncover continuously with a recursive
-      }
-      if (state[row][col].equals("covered") && mouseButton == 39) {
+      // process mouse right click:
+      if (mouseButton == 39 && state[row][col].equals("covered")) {
         state[row][col] = "flagged";
       }
-      if (state[row][col].equals("flagged") && mouseButton == 3) {
-        state[row][col] = "covered";
-      }
-      if (state[row][col].equals("uncovered") && mouseButton == 3) {
-        int count = 0;
-        for (int i = 0; i < 8; i++) {
-          if (neighbor[i][0] != -1 && state[neighbor[i][0]][neighbor[i][1]].equals("flagged")) {
-            count += 1;
-          }
+      // process mouse center click:
+      if (mouseButton == 3) {
+        if (state[row][col].equals("flagged")) {
+          state[row][col] = "covered";
         }
-        if (count == this.key[row][col]) {
+        if (state[row][col].equals("uncovered")) {
+          int count = 0;
           for (int i = 0; i < 8; i++) {
-            if (neighbor[i][0] != -1 && state[neighbor[i][0]][neighbor[i][1]].equals("covered")) {
-              state[neighbor[i][0]][neighbor[i][1]] = "uncovered";
-              if (key[neighbor[i][0]][neighbor[i][1]] == 9) {
-                gameOver = true;
-              }
+            if (neighbor[i][0] != -1 && state[neighbor[i][0]][neighbor[i][1]].equals("flagged")) {
+              count += 1;
             }
           }
-          if (gameOver == true) {
-            for (int r = 0; r < Driver.row; r++) {
-              for (int c = 0; c < Driver.col; c++) {
-                if (state[r][c].equals("covered")) {
-                  state[r][c] = "uncovered";
-                }
-                if (state[r][c].equals("flagged") && key[r][c] != 9) {
-                  state[r][c] = "badFlag";
+          if (count == this.key[row][col]) {
+            for (int i = 0; i < 8; i++) {
+              if (neighbor[i][0] != -1 && state[neighbor[i][0]][neighbor[i][1]].equals("covered")) {
+                state[neighbor[i][0]][neighbor[i][1]] = "uncovered";
+                if (key[neighbor[i][0]][neighbor[i][1]] == 9) {
+                  gameState = gameOver;
                 }
               }
             }
-            for (int i = 0; i < 8; i++) {
-              if (state[neighbor[i][0]][neighbor[i][1]].equals("uncovered")
-                  && key[neighbor[i][0]][neighbor[i][1]] == 9) {
-                state[neighbor[i][0]][neighbor[i][1]] = "triggeredMine";
+            if (gameState.equals(gameOver)) {
+              for (int r = 0; r < Driver.row; r++) {
+                for (int c = 0; c < Driver.col; c++) {
+                  if (state[r][c].equals("covered")) {
+                    state[r][c] = "uncovered";
+                  }
+                  if (state[r][c].equals("flagged") && key[r][c] != 9) {
+                    state[r][c] = "badFlag";
+                  }
+                }
+              }
+              for (int i = 0; i < 8; i++) {
+                if (state[neighbor[i][0]][neighbor[i][1]].equals("uncovered")
+                    && key[neighbor[i][0]][neighbor[i][1]] == 9) {
+                  state[neighbor[i][0]][neighbor[i][1]] = "triggeredMine";
+                }
               }
             }
           }
         }
       }
+    }
+    // test for victory:
+    int covered1to8Count = 0;
+    int falseMine = 0;
+    for (int row = 0; row < Driver.row; row++) {
+      for (int col = 0; col < Driver.col; col++) {
+        if (state[row][col].equals("covered") && key[row][col] != 9) {
+          covered1to8Count += 1;
+        }
+        if (state[row][col].equals("flagged") && key[row][col] != 9) {
+          falseMine += 1;
+        }
+      }
+    }
+    if (covered1to8Count == 0 && falseMine == 0) {
+      for (int row = 0; row < Driver.row; row++) {
+        for (int col = 0; col < Driver.col; col++) {
+          if (state[row][col].equals("covered") && key[row][col] != 9) {
+            if (key[row][col] != 9) {
+              state[row][col].equals("uncovered");
+            }
+            if (key[row][col] == 9) {
+              state[row][col].equals("flagged");
+            }
+          }
+        }
+      }
+      gameState = victory;
     }
     draw();
   }
@@ -227,7 +261,7 @@ public class Minesweeper {
     return output;
   }
 
-  /*
+  /**
    * continuously output the current game progress, executes user inputs based on the state of each
    * individual square
    */

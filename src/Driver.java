@@ -3,16 +3,16 @@
 import processing.core.PApplet;
 
 /**
- * the driver application for Minesweeper
+ * This class is the driver application for Minesweeper.
  * 
  * @author laogao216
  */
 public class Driver extends PApplet {
 
   // TODO - prompt user for the following three fields
-  public static int row = 50;
-  public static int col = 50;
-  public static int mineCount = 500;
+  public static int row = 25;
+  public static int col = 25;
+  public static int mineCount = 100;
 
   private Minesweeper pen;
 
@@ -50,7 +50,7 @@ public class Driver extends PApplet {
    */
   @Override
   public void draw() {
-    pen.update(mouseX, mouseY, mousePressed, mouseButton);
+    pen.update(mouseX, mouseY, mousePressed, mouseButton, keyPressed ? key : '\0');
   }
 
 }

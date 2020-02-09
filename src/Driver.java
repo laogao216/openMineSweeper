@@ -3,7 +3,7 @@
 import processing.core.PApplet;
 
 /**
- * This class is the driver application for Minesweeper.
+ * This class is the driver application for Minesweeper
  * 
  * @author laogao216
  */

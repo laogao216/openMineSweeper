@@ -94,22 +94,40 @@ public class Minesweeper {
   /**
    * Called by Driver.draw continuously. process user inputs by altering the state of each square
    * 
-   * @param mouseX       - x coordinate of location of the mouse
-   * @param mouseY       - y coordinate of location of the mouse
-   * @param mousePressed - true is mouse is pressed, false if otherwise
-   * @param mouseButton  - the button on the mouse that is pressed: left = 37, center = 3, right =
-   *                     39
+   * @param mouseX     - x coordinate of location of the mouse
+   * @param mouseY     - y coordinate of location of the mouse
+   * @param keyPressed - char from keyboard input
    */
-  public void update(int mouseX, int mouseY, boolean mousePressed, int mouseButton,
-      char keyPressed) {
+  public void update(int mouseX, int mouseY, char keyPressed) {
     if (gameState.equals(alive) && mouseX > 0 && mouseX < Driver.row * 16 + 1 && mouseY > 0
         && mouseY < Driver.col * 16 + 1) {
       // TODO - restart game if first uncovered square does not have key == 0
       int row = (mouseX - 1) / 16;
       int col = (mouseY - 1) / 16;
       int neighbor[][] = neighbors(row, col);
-      // process mouse left click:
-      if (mouseButton == 37) {
+      int foundMine = 0;
+      int covered = 0;
+      for (int r = 0; r < Driver.row; r++) {
+        for (int c = 0; c < Driver.col; c++) {
+          if (tile[r][c].getState() == Display.FLAG && tile[r][c].getKey() == 9) {
+            foundMine += 1;
+          }
+          if (tile[r][c].getState() == Display.COVERED) {
+            covered += 1;
+          }
+        }
+      }
+      // process flagging:
+      if (keyPressed == 'x' && tile[row][col].getState() == Display.COVERED) {
+        tile[row][col].setState(Display.FLAG);
+        coveredMine -= 1;
+      }
+      if (keyPressed == 'c' && tile[row][col].getState() == Display.FLAG) {
+        tile[row][col].setState(Display.COVERED);
+        coveredMine += 1;
+      }
+      // process uncovering:
+      if (keyPressed == 'z') {
         if (tile[row][col].getKey() != 9 && tile[row][col].getState() != Display.FLAG) {
           tile[row][col].setState(Display.UNCOVERED);
           // TODO - uncover continuously with a recursive
@@ -117,28 +135,6 @@ public class Minesweeper {
         if (tile[row][col].getKey() == 9 && tile[row][col].getState() == Display.COVERED) {
           gameState = gameOver;
           tile[row][col].setState(Display.TRIGGERED_MINE);
-          for (int r = 0; r < Driver.row; r++) {
-            for (int c = 0; c < Driver.col; c++) {
-              if (tile[r][c].getState() == Display.FLAG && tile[r][c].getKey() != 9) {
-                tile[r][c].setState(Display.BAD_FLAG);
-              } else if (tile[r][c].getState() != Display.FLAG
-                  && tile[r][c].getState() != Display.TRIGGERED_MINE) {
-                tile[r][c].setState(Display.UNCOVERED);
-              }
-            }
-          }
-        }
-      }
-      // process mouse right click:
-      if (mousePressed == true && mouseButton == 39 && tile[row][col].getState() == Display.COVERED) {
-        tile[row][col].setState(Display.FLAG);
-        coveredMine -= 1;
-      }
-      // process mouse center click:
-      if (keyPressed == 'z') {
-        if (tile[row][col].getState() == Display.FLAG) {
-          tile[row][col].setState(Display.COVERED);
-          coveredMine += 1;
         }
         if (tile[row][col].getState() == Display.UNCOVERED) {
           int count = 0;
@@ -150,28 +146,18 @@ public class Minesweeper {
           }
           if (count == this.tile[row][col].getKey()) {
             for (int i = 0; i < 8; i++) {
-              if (neighbor[i][0] != -1
-                  && tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.COVERED) {
-                tile[neighbor[i][0]][neighbor[i][1]].setState(Display.UNCOVERED);
-                if (tile[neighbor[i][0]][neighbor[i][1]].getKey() == 9) {
+              if (neighbor[i][0] != -1) {
+                if (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.FLAG
+                    && tile[neighbor[i][0]][neighbor[i][1]].getKey() != 9) {
                   gameState = gameOver;
                 }
-              }
-            }
-            if (gameState.equals(gameOver)) {
-              for (int r = 0; r < Driver.row; r++) {
-                for (int c = 0; c < Driver.col; c++) {
-                  if (tile[r][c].getState() == Display.COVERED) {
-                    tile[r][c].setState(Display.UNCOVERED);
-                  }
-                  if (tile[r][c].getState() == Display.FLAG && tile[r][c].getKey() != 9) {
-                    tile[r][c].setState(Display.BAD_FLAG);
-                  }
+                if (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.COVERED
+                    && tile[neighbor[i][0]][neighbor[i][1]].getKey() != 9) {
+                  tile[neighbor[i][0]][neighbor[i][1]].setState(Display.UNCOVERED);
                 }
-              }
-              for (int i = 0; i < 8; i++) {
-                if (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.UNCOVERED
+                if (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.COVERED
                     && tile[neighbor[i][0]][neighbor[i][1]].getKey() == 9) {
+                  gameState = gameOver;
                   tile[neighbor[i][0]][neighbor[i][1]].setState(Display.TRIGGERED_MINE);
                 }
               }
@@ -179,42 +165,47 @@ public class Minesweeper {
           }
         }
       }
-    }
-    // test for victory:
-    int covered1to8Count = 0;
-    int falseMine = 0;
-    for (int row = 0; row < Driver.row; row++) {
-      for (int col = 0; col < Driver.col; col++) {
-        if (tile[row][col].getState() == Display.COVERED && tile[row][col].getKey() != 9) {
-          covered1to8Count += 1;
-        }
-        if (tile[row][col].getState() == Display.FLAG && tile[row][col].getKey() != 9) {
-          falseMine += 1;
-        }
+      // test for victory:
+      if (foundMine == Driver.mineCount || foundMine + covered == Driver.mineCount) {
+        gameState = victory;
       }
-    }
-    if (covered1to8Count == 0 && falseMine == 0) {
-      for (int row = 0; row < Driver.row; row++) {
-        for (int col = 0; col < Driver.col; col++) {
-          if (tile[row][col].getState() == Display.COVERED && tile[row][col].getKey() != 9) {
-            if (tile[row][col].getKey() != 9) {
-              tile[row][col].setState(Display.UNCOVERED);
+      // prepare game result:
+      if (gameState.equals(victory)) {
+        coveredMine = 0;
+        for (int r = 0; r < Driver.row; r++) {
+          for (int c = 0; c < Driver.col; c++) {
+            if (tile[r][c].getKey() != 9) {
+              tile[r][c].setState(Display.UNCOVERED);
             }
-            if (tile[row][col].getKey() == 9) {
-              tile[row][col].setState(Display.FLAG);
+            if (tile[r][c].getKey() == 9) {
+              tile[r][c].setState(Display.FLAG);
             }
           }
         }
       }
-      gameState = victory;
+      if (gameState.equals(gameOver)) {
+        coveredMine = Driver.mineCount - foundMine;
+        for (int r = 0; r < Driver.row; r++) {
+          for (int c = 0; c < Driver.col; c++) {
+            if (tile[r][c].getState() == Display.FLAG && tile[r][c].getKey() != 9) {
+              tile[r][c].setState(Display.BAD_FLAG);
+            } else if (tile[r][c].getState() != Display.FLAG
+                && tile[r][c].getState() != Display.TRIGGERED_MINE) {
+              tile[r][c].setState(Display.UNCOVERED);
+            }
+          }
+        }
+      }
+      // output the current game progress
+      draw();
     }
-    draw();
   }
 
   /**
-   * makes a 2d int array of every existing neighbor of the square. The upper left square is the
-   * first in sequence and one under it is the last, going clockwise. If the neighbor does not
-   * exist, its place would be held by -1
+   * makes a 2d int array of every existing neighbor of the square, in the format of [neighbor
+   * index][0 for row, 1 for col index of neighbor]. The upper left square is the first in sequence
+   * and one under it is the last, going clockwise. If the neighbor does not exist, its place would
+   * be held by -1
    * 
    * @param row - the row index of the central square
    * @param col - the column index of the central square
@@ -263,8 +254,8 @@ public class Minesweeper {
   }
 
   /**
-   * continuously output the current game progress, executes user inputs based on the state of each
-   * individual square
+   * continuously output the current game progress, displays each individual tile game board
+   * according to its displayed state.
    */
   private void draw() {
     System.out.println(coveredMine);

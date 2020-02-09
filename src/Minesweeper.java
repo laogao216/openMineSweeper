@@ -6,7 +6,7 @@ import processing.core.PApplet;
 import processing.core.PImage;
 
 /**
- * This class processes and executes user inputs passed from Driver.
+ * This class processes and executes user inputs passed from Driver
  * 
  * @author laogao216
  */

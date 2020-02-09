@@ -3,7 +3,7 @@
 import processing.core.PApplet;
 
 /**
- * This class is the driver application for Minesweeper
+ * This class is the driver application for Minesweeper.
  * 
  * @author laogao216
  */
@@ -50,7 +50,7 @@ public class Driver extends PApplet {
    */
   @Override
   public void draw() {
-    pen.update(mouseX, mouseY, keyPressed ? key : '\0');
+    pen.update(mouseX, mouseY, mousePressed, mouseButton);
   }
 
 }

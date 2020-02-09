@@ -10,9 +10,9 @@ import processing.core.PApplet;
 public class Driver extends PApplet {
 
   // TODO - prompt user for the following three fields
-  public static int row = 25;
-  public static int col = 25;
-  public static int mineCount = 100;
+  public static int row = 10;
+  public static int col = 10;
+  public static int mineCount = 10;
 
   private Minesweeper pen;
 
@@ -50,7 +50,7 @@ public class Driver extends PApplet {
    */
   @Override
   public void draw() {
-    pen.update(mouseX, mouseY, mousePressed, mouseButton, keyPressed ? key : '\0');
+    pen.update(mouseX, mouseY, keyPressed ? key : '\0');
   }
 
 }

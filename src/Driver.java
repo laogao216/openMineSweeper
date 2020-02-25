@@ -10,11 +10,14 @@ import processing.core.PApplet;
 public class Driver extends PApplet {
 
   // TODO - prompt user for the following three fields
-  public static int row = 10;
-  public static int col = 10;
-  public static int mineCount = 10;
+  public static int row = 50;
+  public static int col = 50;
+  public static int mineCount = 500;
 
   private Minesweeper pen;
+  private int rowDisp = 0;
+  private int colDisp = 51;
+  // move the game board down or to the right. Unit is pixel.
 
   /**
    * runs PApplet
@@ -30,7 +33,7 @@ public class Driver extends PApplet {
    */
   @Override
   public void settings() {
-    size(row * 16 + 1, col * 16 + 1);
+    size(row * 16 + 1 + rowDisp, col * 16 + 1 + colDisp);
   }
 
   /**
@@ -40,7 +43,7 @@ public class Driver extends PApplet {
    */
   @Override
   public void setup() {
-    pen = new Minesweeper(this);
+    pen = new Minesweeper(this, rowDisp, colDisp);
   }
 
   /**

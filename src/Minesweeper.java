@@ -21,7 +21,7 @@ public class Minesweeper {
   private final PImage blank;
   private final PImage[] counter = new PImage[10];
   private final PImage counterNegative;
-  private Tile[][] tile = new Tile[Driver.row][Driver.col];
+  private Tile[][] tile = new Tile[Driver.getRow()][Driver.getCol()];
   private final String start = "start :)";
   private final String alive = "alive ^-^";
   private final String gameOver = "gameOver *~*";
@@ -32,20 +32,15 @@ public class Minesweeper {
   // number of mines left, displayed on top of game board
   private int[] firstMoveRowCol;
   // record the location of the first move, in case its key is not 0 and game has to restart
-  private int rowDisp;
-  private int colDisp;
-  // move the game board to the right or down. Unit is pixel.
+  private int yDisp = 51;
+  // move the game board down. Unit is pixel.
 
   /**
    * Initialize the above fields and initialize game.
    * 
    * @param processing - the PApplet to be used here
-   * @param rowDisp - move the game board to the right. Unit is pixel.
-   * @param colDisp - move the game board down. Unit is pixel.
    */
-  public Minesweeper(PApplet processing, int rowDisp, int colDisp) {
-    this.rowDisp = rowDisp;
-    this.colDisp = colDisp;
+  public Minesweeper(PApplet processing) {
     gameState = start;
     this.processing = processing;
     firstMoveRowCol = new int[] {-1, -1};
@@ -71,26 +66,26 @@ public class Minesweeper {
   /**
    * Initializes the Game
    */
-  public void initGame() {
-    coveredMine = Driver.mineCount;
-    for (int row = 0; row < Driver.row; row++) {
-      for (int col = 0; col < Driver.col; col++) {
+  private void initGame() {
+    coveredMine = Driver.getMineCount();
+    for (int row = 0; row < Driver.getRow(); row++) {
+      for (int col = 0; col < Driver.getCol(); col++) {
         tile[row][col] = new Tile();
       }
     }
-    boolean[][] seatAvailable = new boolean[Driver.row][Driver.col];
-    for (int row = 0; row < Driver.row; row++) {
-      for (int col = 0; col < Driver.col; col++) {
+    boolean[][] seatAvailable = new boolean[Driver.getRow()][Driver.getCol()];
+    for (int row = 0; row < Driver.getRow(); row++) {
+      for (int col = 0; col < Driver.getCol(); col++) {
         seatAvailable[row][col] = true;
       }
     }
-    for (int i = 0; i < Driver.mineCount; i++) {
+    for (int i = 0; i < Driver.getMineCount(); i++) {
       Random random = new Random();
-      int row = random.nextInt() % Driver.row;
+      int row = random.nextInt() % Driver.getRow();
       if (row < 0) {
         row = row * -1;
       }
-      int col = random.nextInt() % Driver.col;
+      int col = random.nextInt() % Driver.getCol();
       if (col < 0) {
         col = col * -1;
       }
@@ -101,8 +96,8 @@ public class Minesweeper {
         i -= 1;
       }
     }
-    for (int row = 0; row < Driver.row; row++) {
-      for (int col = 0; col < Driver.col; col++) {
+    for (int row = 0; row < Driver.getRow(); row++) {
+      for (int col = 0; col < Driver.getCol(); col++) {
         if (tile[row][col].getKey() != 9) {
           int count = 0;
           int neighbor[][] = neighbors(row, col);
@@ -128,7 +123,7 @@ public class Minesweeper {
    * @param mouseButton  - the button on the mouse (left: 37, center: 3, right: 39)
    */
   public void update(int mouseX, int mouseY, boolean mousePressed, int mouseButton) {
-    // handle restarted game due to unlucky first move:
+    // handle first move when game already restarted at least once:
     if (gameState.equals(start) && firstMoveRowCol[0] != -1) {
       int row = firstMoveRowCol[0];
       int col = firstMoveRowCol[1];
@@ -136,15 +131,16 @@ public class Minesweeper {
         gameState = alive;
         uncoverHelp(row, col);
       } else {
+        // TODO - condition initGame() to plant a key == 0 at firstMoveRowCol[] if its not [-1, -1]
         initGame();
       }
     }
-    // handle first move:
-    if (mouseX > rowDisp && mouseX < Driver.row * 16 + 1 + rowDisp && mouseY > colDisp
-        && mouseY < Driver.col * 16 + 1 + colDisp) {
+    if (mouseX > 0 && mouseX < Driver.getRow() * 16 + 1 && mouseY > yDisp
+        && mouseY < Driver.getCol() * 16 + 1 + yDisp) {
+      // handle first move for the first time:
       if (gameState.equals(start)) {
-        int row = (mouseX - rowDisp - 1) / 16;
-        int col = (mouseY - colDisp - 1) / 16;
+        int row = (mouseX - 1) / 16;
+        int col = (mouseY - yDisp - 1) / 16;
         if (mousePressed == true && mouseButton == 37) {
           if (tile[row][col].getKey() == 0) {
             gameState = alive;
@@ -159,12 +155,12 @@ public class Minesweeper {
       }
       // handle main game play. calls draw() until this testing fails, on victory or death:
       if (gameState.equals(alive)) {
-        int row = (mouseX - rowDisp - 1) / 16;
-        int col = (mouseY - colDisp - 1) / 16;
+        int row = (mouseX - 1) / 16;
+        int col = (mouseY - yDisp - 1) / 16;
         int foundMine = 0;
         int wrongMine = 0;
-        for (int r = 0; r < Driver.row; r++) {
-          for (int c = 0; c < Driver.col; c++) {
+        for (int r = 0; r < Driver.getRow(); r++) {
+          for (int c = 0; c < Driver.getCol(); c++) {
             if (tile[r][c].getState() == Display.FLAG && tile[r][c].getKey() == 9) {
               foundMine += 1;
             }
@@ -188,14 +184,14 @@ public class Minesweeper {
           uncoverHelp(row, col);
         }
         // test for victory:
-        if (foundMine == Driver.mineCount && wrongMine == 0) {
+        if (foundMine == Driver.getMineCount() && wrongMine == 0) {
           gameState = victory;
         }
         // prepare game result:
         if (gameState.equals(victory)) {
           coveredMine = 0;
-          for (int r = 0; r < Driver.row; r++) {
-            for (int c = 0; c < Driver.col; c++) {
+          for (int r = 0; r < Driver.getRow(); r++) {
+            for (int c = 0; c < Driver.getCol(); c++) {
               if (tile[r][c].getKey() != 9) {
                 tile[r][c].setState(Display.UNCOVERED);
               }
@@ -206,9 +202,9 @@ public class Minesweeper {
           }
         }
         if (gameState.equals(gameOver)) {
-          coveredMine = Driver.mineCount - foundMine;
-          for (int r = 0; r < Driver.row; r++) {
-            for (int c = 0; c < Driver.col; c++) {
+          coveredMine = Driver.getMineCount() - foundMine;
+          for (int r = 0; r < Driver.getRow(); r++) {
+            for (int c = 0; c < Driver.getCol(); c++) {
               if (tile[r][c].getState() == Display.FLAG && tile[r][c].getKey() != 9) {
                 tile[r][c].setState(Display.BAD_FLAG);
               } else if (tile[r][c].getState() != Display.FLAG
@@ -249,23 +245,23 @@ public class Minesweeper {
       output[1][0] = row - 1;
       output[1][1] = col;
     }
-    if (row > 0 && col < Driver.col - 1) {
+    if (row > 0 && col < Driver.getCol() - 1) {
       output[2][0] = row - 1;
       output[2][1] = col + 1;
     }
-    if (col < Driver.col - 1) {
+    if (col < Driver.getCol() - 1) {
       output[3][0] = row;
       output[3][1] = col + 1;
     }
-    if (row < Driver.row - 1 && col < Driver.col - 1) {
+    if (row < Driver.getRow() - 1 && col < Driver.getCol() - 1) {
       output[4][0] = row + 1;
       output[4][1] = col + 1;
     }
-    if (row < Driver.row - 1) {
+    if (row < Driver.getRow() - 1) {
       output[5][0] = row + 1;
       output[5][1] = col;
     }
-    if (row < Driver.row - 1 && col > 0) {
+    if (row < Driver.getRow() - 1 && col > 0) {
       output[6][0] = row + 1;
       output[6][1] = col - 1;
     }
@@ -339,6 +335,8 @@ public class Minesweeper {
             }
           }
         }
+      } else {
+        return;
       }
     }
     // recursive call for uncovering a single tile:
@@ -374,27 +372,26 @@ public class Minesweeper {
       }
     }
     // display game board:
-    for (int row = 0; row < Driver.row; row++) {
-      for (int col = 0; col < Driver.col; col++) {
+    for (int row = 0; row < Driver.getRow(); row++) {
+      for (int col = 0; col < Driver.getCol(); col++) {
         if (tile[row][col].getState() == Display.COVERED) {
-          processing.image(blank, row * 16 + 1 + rowDisp, col * 16 + 1 + colDisp);
+          processing.image(blank, row * 16 + 1, col * 16 + 1 + yDisp);
         }
         if (tile[row][col].getState() == Display.UNCOVERED) {
           if (tile[row][col].getKey() == 9) {
-            processing.image(mine, row * 16 + 1 + rowDisp, col * 16 + 1 + colDisp);
+            processing.image(mine, row * 16 + 1, col * 16 + 1 + yDisp);
           } else {
-            processing.image(num[tile[row][col].getKey()], row * 16 + 1 + rowDisp,
-                col * 16 + 1 + colDisp);
+            processing.image(num[tile[row][col].getKey()], row * 16 + 1, col * 16 + 1 + yDisp);
           }
         }
         if (tile[row][col].getState() == Display.FLAG) {
-          processing.image(flag, row * 16 + 1 + rowDisp, col * 16 + 1 + colDisp);
+          processing.image(flag, row * 16 + 1, col * 16 + 1 + yDisp);
         }
         if (tile[row][col].getState() == Display.TRIGGERED_MINE) {
-          processing.image(triggeredMine, row * 16 + 1 + rowDisp, col * 16 + 1 + colDisp);
+          processing.image(triggeredMine, row * 16 + 1, col * 16 + 1 + yDisp);
         }
         if (tile[row][col].getState() == Display.BAD_FLAG) {
-          processing.image(badFlag, row * 16 + 1 + rowDisp, col * 16 + 1 + colDisp);
+          processing.image(badFlag, row * 16 + 1, col * 16 + 1 + yDisp);
         }
       }
     }

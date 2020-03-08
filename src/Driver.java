@@ -10,33 +10,64 @@ import javax.swing.JOptionPane;
  */
 public class Driver extends PApplet {
 
-  // TODO - add custom dimension, use jFrame or jPanel, throw error when mineCount > row * col - 9
-  private static int row;
-  private static int col;
-  private static int mineCount;
+  public static int ROW;
+  public static int COL;
+  public static int MINE_COUNT;
   private Minesweeper pen;
 
   /**
-   * runs PApplet
+   * Initialize ROW, COl, and MINE_COUNT with user input before running PApplet.main()
    */
   public static void main(String[] args) {
-    String[] options = {"Easy", "Normal", "Hard"};
+    String[] options = {"Easy", "Normal", "Hard", "Custimize"};
     String message = "Easy: 10*10, 10 mines" + System.lineSeparator() + "Normal: 20*20, 60 mines"
         + System.lineSeparator() + "Hard: 50*50, 500 mines";
-    int input = JOptionPane.showOptionDialog(null, message, "choose difficulty level",
+    int input = JOptionPane.showOptionDialog(null, message, "Choose Difficulty Level",
         JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
     if (input == 0) {
-      row = 10;
-      col = 10;
-      mineCount = 10;
+      ROW = 10;
+      COL = 10;
+      MINE_COUNT = 10;
     } else if (input == 1) {
-      row = 20;
-      col = 20;
-      mineCount = 60;
+      ROW = 20;
+      COL = 20;
+      MINE_COUNT = 60;
     } else if (input == 2) {
-      row = 50;
-      col = 50;
-      mineCount = 500;
+      ROW = 50;
+      COL = 50;
+      MINE_COUNT = 500;
+    } else if (input == 3) {
+      try {
+        String rowInput = JOptionPane.showInputDialog(null, "Length of each row", "Customize (1/3)",
+            JOptionPane.QUESTION_MESSAGE);
+        ROW = Integer.parseInt(rowInput);
+        if (ROW < 1) {
+          throw new NumberFormatException();
+        }
+        String colInput = JOptionPane.showInputDialog(null, "Length of each column",
+            "Customize (2/3)", JOptionPane.QUESTION_MESSAGE);
+        COL = Integer.parseInt(colInput);
+        if (COL < 1) {
+          throw new NumberFormatException();
+        }
+        String mineCountInput = JOptionPane.showInputDialog(null, "Number of mine",
+            "Customize (3/3)", JOptionPane.QUESTION_MESSAGE);
+        MINE_COUNT = Integer.parseInt(mineCountInput);
+        if (MINE_COUNT < 1) {
+          throw new NumberFormatException();
+        }
+      } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(null, "Enter a positive integer", "Customize Unsuccessful",
+            JOptionPane.ERROR_MESSAGE);
+        return;
+      }
+      if (MINE_COUNT > ROW * COL - 9) {
+        String errorMessage = "There are more mines than the customized dimension can hold"
+            + System.lineSeparator() + "Either increase dimension or decrease number of mines";
+        JOptionPane.showMessageDialog(null, errorMessage, "Customize Unsuccessful",
+            JOptionPane.ERROR_MESSAGE);
+        return;
+      }
     } else {
       return;
     }
@@ -44,17 +75,17 @@ public class Driver extends PApplet {
   }
 
   /**
-   * set up window dimension
+   * Set up window dimension.
    * 
    * @see https://processing.org/reference/settings_.html
    */
   @Override
   public void settings() {
-    size(row * 16 + 1, col * 16 + 1 + 51);
+    size(ROW * 16 + 1, COL * 16 + 1 + 51);
   }
 
   /**
-   * calling Minesweeper constructor with PApplet processing
+   * Call Minesweeper constructor with PApplet processing as argument.
    * 
    * @see https://processing.org/reference/setup_.html
    */
@@ -64,7 +95,7 @@ public class Driver extends PApplet {
   }
 
   /**
-   * send user actions to Minesweeper class
+   * Send user actions to Minesweeper class.
    * 
    * @see https://processing.org/reference/draw_.html
    */
@@ -73,31 +104,15 @@ public class Driver extends PApplet {
     pen.update(mouseX, mouseY, mousePressed, mouseButton);
   }
 
-  /**
-   * accessor for row
-   * 
-   * @return length of rows of tiles
-   */
-  public static int getRow() {
-    return row;
-  }
-
-  /**
-   * accessor for col
-   * 
-   * @return length of columns of tiles
-   */
-  public static int getCol() {
-    return col;
-  }
-
-  /**
-   * accessor for mineCount
-   * 
-   * @return number of mines
-   */
-  public static int getMineCount() {
-    return mineCount;
-  }
-
 }
+
+// This is a great moment for both this pet project of mine and myself:
+// Firstly, I have finished all the todo tags and I like what this is now so I am calling it done.
+// I will export the project in one executable file from eclipse for the first time.
+// This does not mean I will stop working on it. There are always places to improve. 
+// And g*d forbid i catch any bugs. What I mean is it passes as a functional game.
+// I will mostly make cosmetic changes from now on, to make the game play more smoothly
+// or jsut for the look.
+// Secondly, I met someone, and I am going to dedication this program to her. 
+// My darling, if you see this, that means you care enough about me to follow my progress here.
+// Thank you for that. Also, I want to let you know that I love you. Always.

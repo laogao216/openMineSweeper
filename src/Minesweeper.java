@@ -1,5 +1,9 @@
 ///////////////////////////////////////// 100 COLUMNS WIDE /////////////////////////////////////////
 
+// TODO - add keyboard control option
+// TODO - add timer with javax.swing.Timer
+// TODO - add end game message
+
 import java.io.File;
 import java.util.Random;
 import processing.core.PApplet;
@@ -32,7 +36,7 @@ public class Minesweeper {
   // number of mines left, displayed on top of game board
   private int[] firstMoveRowCol;
   // record the location of the first move, in case its key is not 0 and game has to restart
-  private int yDisp = 51;
+  private int yDisp = 52;
   // move the game board down. Unit is pixel.
 
   /**
@@ -366,23 +370,21 @@ public class Minesweeper {
    */
   private void draw() {
     // display counter:
-    if (coveredMine > -1) {
+    if (coveredMine > -1 && coveredMine < 10000) {
       processing.image(counter[coveredMine / 1000], 1, 1);
       processing.image(counter[coveredMine % 1000 / 100], 28, 1);
       processing.image(counter[coveredMine % 100 / 10], 55, 1);
       processing.image(counter[coveredMine % 10], 82, 1);
+    } else if (-1 * coveredMine / 1000 == 0) {
+      processing.image(counterNegative, 1, 1);
+      processing.image(counter[-1 * coveredMine % 1000 / 100], 28, 1);
+      processing.image(counter[-1 * coveredMine % 100 / 10], 55, 1);
+      processing.image(counter[-1 * coveredMine % 10], 82, 1);
     } else {
-      if (-1 * coveredMine / 1000 == 0) {
-        processing.image(counterNegative, 1, 1);
-        processing.image(counter[-1 * coveredMine % 1000 / 100], 28, 1);
-        processing.image(counter[-1 * coveredMine % 100 / 10], 55, 1);
-        processing.image(counter[-1 * coveredMine % 10], 82, 1);
-      } else {
-        processing.image(counterNegative, 1, 1);
-        processing.image(counterNegative, 28, 1);
-        processing.image(counterNegative, 55, 1);
-        processing.image(counterNegative, 82, 1);
-      }
+      processing.image(counterNegative, 1, 1);
+      processing.image(counterNegative, 28, 1);
+      processing.image(counterNegative, 55, 1);
+      processing.image(counterNegative, 82, 1);
     }
     // display game board:
     for (int row = 0; row < Driver.ROW; row++) {

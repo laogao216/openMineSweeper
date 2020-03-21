@@ -1,7 +1,16 @@
 ///////////////////////////////////////// 100 COLUMNS WIDE /////////////////////////////////////////
+//
+// To my little fox,
+// who has everything i love
+// and loves everything i have.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
-import processing.core.PApplet;
+// TODO - add graphic dedication
+
+import java.awt.Toolkit;
 import javax.swing.JOptionPane;
+import processing.core.PApplet;
 
 /**
  * This class is the driver application for Minesweeper.
@@ -38,17 +47,33 @@ public class Driver extends PApplet {
       MINE_COUNT = 500;
     } else if (input == 3) {
       try {
+        int MAX_ROW = Toolkit.getDefaultToolkit().getScreenSize().width / 16;
+        int MAX_COL = (Toolkit.getDefaultToolkit().getScreenSize().height - 139) / 16;
         String rowInput = JOptionPane.showInputDialog(null, "Length of each row", "Customize (1/3)",
             JOptionPane.QUESTION_MESSAGE);
         ROW = Integer.parseInt(rowInput);
         if (ROW < 1) {
           throw new NumberFormatException();
         }
+        if (ROW > MAX_ROW) {
+          String errorMessage = "Rows are too long for your device" + System.lineSeparator()
+              + "Your screen can hold at most " + MAX_ROW + " tiles in each row";
+          JOptionPane.showMessageDialog(null, errorMessage, "Customize Unsuccessful",
+              JOptionPane.ERROR_MESSAGE);
+          return;
+        }
         String colInput = JOptionPane.showInputDialog(null, "Length of each column",
             "Customize (2/3)", JOptionPane.QUESTION_MESSAGE);
         COL = Integer.parseInt(colInput);
         if (COL < 1) {
           throw new NumberFormatException();
+        }
+        if (COL > MAX_COL) {
+          String errorMessage = "Columns are too long for your device" + System.lineSeparator()
+              + "Your screen can hold at most " + MAX_COL + " tiles in each column";
+          JOptionPane.showMessageDialog(null, errorMessage, "Customize Unsuccessful",
+              JOptionPane.ERROR_MESSAGE);
+          return;
         }
         String mineCountInput = JOptionPane.showInputDialog(null, "Number of mine",
             "Customize (3/3)", JOptionPane.QUESTION_MESSAGE);
@@ -81,7 +106,7 @@ public class Driver extends PApplet {
    */
   @Override
   public void settings() {
-    size(ROW * 16 + 1, COL * 16 + 1 + 51);
+    size(ROW * 16 + 1, COL * 16 + 1 + 52);
   }
 
   /**
@@ -105,14 +130,3 @@ public class Driver extends PApplet {
   }
 
 }
-
-// This is a great moment for both this pet project of mine and myself:
-// Firstly, I have finished all the todo tags and I like what this is now so I am calling it done.
-// I will export the project in one executable file from eclipse for the first time.
-// This does not mean I will stop working on it. There are always places to improve. 
-// And g*d forbid i catch any bugs. What I mean is it passes as a functional game.
-// I will mostly make cosmetic changes from now on, to make the game play more smoothly
-// or jsut for the look.
-// Secondly, I met someone, and I am going to dedication this program to her. 
-// My darling, if you see this, that means you care enough about me to follow my progress here.
-// Thank you for that. Also, I want to let you know that I love you. Always.

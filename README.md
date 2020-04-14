@@ -1,10 +1,24 @@
-# openMineSweeper
-Minesweeper made with Eclipse and processing library core.
+# Mines
+Minesweeper, written in Java, made with Eclipse and uses processing library core.
 
-Run Driver.java to play.
+If you havent played minesweer yet, you can look up its rules and strategies or refer to [this wikipedia page](https://en.wikipedia.org/wiki/Minesweeper_(video_game)).
+
+### *For users*
+1. download java [here](https://www.java.com/en/download/) if you haven't
+2. download the Mines folder and run Mines.jar 
+
+### *For developers*
+1. load the four classes in the scr folder into your IDE, I used eclipse
+2. download the images folder to your project root
+3. download and build path to core.jar
+
 # Game controls: 
-  mouse left click to uncover a tile if mouse on a covered tile, or uncover all tiles around if mouse on an uncovered tile.
-  
-  mouse right click to place a mine on a covered tile.
-  
-  mouse center (or wheel) click to undo mine placement.
+Mouse left click on a covered tile to uncover it,
+
+Mouse left click on a uncovered tile to uncover all tiles around it.
+
+Mouse right click on a covered tile to flag it.
+
+Mouse center (or wheel) click on a flag to unflag it.
+
+I understand that the tiles are small, mouses are clumsy, and one mistake would doom a game. So keyboard control is coming 

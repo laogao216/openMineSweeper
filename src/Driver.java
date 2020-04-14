@@ -1,12 +1,6 @@
 ///////////////////////////////////////// 100 COLUMNS WIDE /////////////////////////////////////////
-//
-//   To my little fox,
-//   who has everything i love
-//   and loves everything i have.
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// TODO - add graphic dedication
+// For my sweet Callista
 
 import java.awt.Toolkit;
 import javax.swing.JOptionPane;
@@ -126,7 +120,11 @@ public class Driver extends PApplet {
    */
   @Override
   public void draw() {
-    pen.update(mouseX, mouseY, mousePressed, mouseButton);
+    if (pen.termination == false) {
+      pen.update(mouseX, mouseY, mousePressed, mouseButton);
+    } else {
+      stop();
+    }
   }
 
 }

@@ -2,10 +2,10 @@
 
 // TODO - add keyboard control option
 // TODO - add timer with javax.swing.Timer
-// TODO - add end game message
 
 import java.io.File;
 import java.util.Random;
+import javax.swing.JOptionPane;
 import processing.core.PApplet;
 import processing.core.PImage;
 
@@ -30,6 +30,8 @@ public class Minesweeper {
   private final String alive = "alive ^-^";
   private final String gameOver = "gameOver *~*";
   private final String victory = "victory ^o^";
+  public boolean termination = false;
+  // stop drawing if true
   private String gameState;
   // record the state of game progress
   private int coveredMine;
@@ -136,6 +138,20 @@ public class Minesweeper {
    * @param mouseButton  - the button on the mouse (left: 37, center: 3, right: 39)
    */
   public void update(int mouseX, int mouseY, boolean mousePressed, int mouseButton) {
+    if (gameState.equals(victory)) {
+      JOptionPane.showMessageDialog(null,
+          "Success" + System.lineSeparator() + "Thank you for playing!", "Game Result",
+          JOptionPane.INFORMATION_MESSAGE);
+      termination = true;
+      return;
+    }
+    if (gameState.equals(gameOver)) {
+      JOptionPane.showMessageDialog(null,
+          "Failure" + System.lineSeparator() + "Thank you for playing!", "Game Result",
+          JOptionPane.INFORMATION_MESSAGE);
+      termination = true;
+      return;
+    }
     // handle first move when game already restarted at least once:
     if (gameState.equals(start) && firstMoveRowCol[0] != -1) {
       int row = firstMoveRowCol[0];
@@ -386,6 +402,8 @@ public class Minesweeper {
       processing.image(counterNegative, 55, 1);
       processing.image(counterNegative, 82, 1);
     }
+    processing.fill(0);
+    processing.rect(109, 1, Driver.ROW * 16 - 109, 50);
     // display game board:
     for (int row = 0; row < Driver.ROW; row++) {
       for (int col = 0; col < Driver.COL; col++) {

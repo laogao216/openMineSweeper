@@ -5,7 +5,7 @@ If you havent played minesweer yet, you can look up its rules and strategies or 
 
 ### *For users*
 1. download java [here](https://www.java.com/en/download/) if you haven't
-2. download the Mines.zip file above
+2. download the Mines_1.1.0.zip file above
 3. extract the Mines folder from Mines.zip
 4. execute Mines.jar
 
@@ -15,6 +15,7 @@ If you havent played minesweer yet, you can look up its rules and strategies or 
 3. download and build path to core.jar
 
 # Game controls: 
+To toggle between mouse and keyboard mode click on the respected areas on the top bar or press t on the keyboard.
 
 ### *keyboard control*
 wasd for moving highlighted tile around.

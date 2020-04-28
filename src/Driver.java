@@ -1,6 +1,12 @@
 ///////////////////////////////////////// 100 COLUMNS WIDE /////////////////////////////////////////
 
-// For my sweet Callista
+// To my lovely Callista: 
+// you are my light
+// that burns bright
+// and provide me with sight
+// in the darkest night
+
+// TODO - build a better dedication
 
 import java.awt.Toolkit;
 import javax.swing.JOptionPane;
@@ -121,7 +127,7 @@ public class Driver extends PApplet {
   @Override
   public void draw() {
     if (pen.termination == false) {
-      pen.update(mouseX, mouseY, mousePressed, mouseButton);
+      pen.update(mouseX, mouseY, mousePressed, mouseButton, keyPressed ? key : '\0');
     } else {
       stop();
     }

@@ -5,34 +5,35 @@ If you havent played minesweer yet, you can look up its rules and strategies or 
 
 ### *For users*
 1. download java [here](https://www.java.com/en/download/) if you haven't
-2. download the Mines_1.1.0.zip file above
-3. extract the Mines folder from Mines.zip
+2. download the Mines_1.2.0.zip file above
+3. extract all contents from Mines.zip to a derectory of your choice
 4. execute Mines.jar
 
-### *For developers*
-1. load the four classes in the scr folder into your IDE, I used eclipse
-2. download the images folder to your project root
-3. download and build path to core.jar
-
 # Game controls: 
-To toggle between mouse and keyboard mode click on the respected areas on the top bar or press t on the keyboard.
+To start a new game press 'n' or click on "NEW GAME" from the right-hand panel.
+To toggle between mouse and keyboard control press 'c' or click on "MOUSE/KEYBOARD CONTROL" from the right-hand panel.
+To toggle highlight press 'h' or click on "HIDE/SHOW HIGHLIGHT" from the right hand panel.
 
 ### *keyboard control*
-wasd for moving highlighted tile around.
+'w', 'a', 's', 'd' for moving highlighted tile around.
 
-j for uncovering a covered tile or uncover all tiles around an uncovered tile.
+'j' for uncovering a covered tile or uncover all tiles around an uncovered tile.
 
-k for flagging a mine on an uncovered tile.
+'k' for flagging a mine on an uncovered tile.
 
-l for unflagging a flagged tile, returning it to covered.
+'l' for unflagging a flagged tile, returning it to covered.
 
-Also, if game does not responde click on the mine counter in red and black on the top left corner and try again.
+Keyboard commands are implemented at the press of key. 
+
+Also, if game does not responde click on the mine counter at the top left corner and try again.
 
 ### *Mouse control*
 Mouse left click on a covered tile to uncover it,
 
-Mouse left click on a uncovered tile to uncover all tiles around it.
+Mouse left click on a uncovered tile to uncover all tiles around it or highlight covered tiles around it if highlight is on.
 
 Mouse right click on a covered tile to flag it.
 
 Mouse center (or wheel) click on a flag to unflag it.
+
+Mouse commands are implemented at the release of button.

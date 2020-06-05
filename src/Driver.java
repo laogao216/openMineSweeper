@@ -1,12 +1,9 @@
 ///////////////////////////////////////// 100 COLUMNS WIDE /////////////////////////////////////////
 
-// To my lovely Callista: 
-// you are my light
-// that burns bright
-// and provide me with sight
-// in the darkest night
-
-// TODO - build a better dedication
+// Light as feather I touch you so slight.
+// Out of darkness comes your brilliant light.
+// Violent as fire we share our delight.
+// Euphoria dissipates to the night.
 
 import java.awt.Toolkit;
 import javax.swing.JOptionPane;
@@ -47,8 +44,9 @@ public class Driver extends PApplet {
       MINE_COUNT = 500;
     } else if (input == 3) {
       try {
-        int MAX_ROW = Toolkit.getDefaultToolkit().getScreenSize().width / 16;
-        int MAX_COL = (Toolkit.getDefaultToolkit().getScreenSize().height - 139) / 16;
+        int MAX_ROW = (Toolkit.getDefaultToolkit().getScreenSize().width - 416) / 16;
+        int MAX_COL = (Toolkit.getDefaultToolkit().getScreenSize().height - 88) / 16;
+        System.out.print(MAX_ROW);
         String rowInput = JOptionPane.showInputDialog(null, "Length of each row", "Customize (1/3)",
             JOptionPane.QUESTION_MESSAGE);
         ROW = Integer.parseInt(rowInput);
@@ -106,7 +104,11 @@ public class Driver extends PApplet {
    */
   @Override
   public void settings() {
-    size(ROW * 16 + 1, COL * 16 + 1 + 52);
+    if (COL > 15) {
+      size(ROW * 16 + 418, COL * 16 + 1);
+    } else {
+      size(ROW * 16 + 418, 257);
+    }
   }
 
   /**
@@ -126,11 +128,7 @@ public class Driver extends PApplet {
    */
   @Override
   public void draw() {
-    if (pen.termination == false) {
-      pen.update(mouseX, mouseY, mousePressed, mouseButton, keyPressed ? key : '\0');
-    } else {
-      stop();
-    }
+    pen.update(mouseX, mouseY, mousePressed, mouseButton, keyPressed ? key : '\0');
   }
 
 }

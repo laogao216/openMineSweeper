@@ -1,13 +1,12 @@
 ///////////////////////////////////////// 100 COLUMNS WIDE /////////////////////////////////////////
 
-// TODO - add timer with javax.swing.Timer
-// TODO - make a solver, use it to implement the option to generate games without dead spots
-
 import java.io.File;
 import java.util.Random;
 import javax.swing.JOptionPane;
 import processing.core.PApplet;
 import processing.core.PImage;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * This class processes and executes user inputs passed from Driver.
@@ -26,33 +25,43 @@ public class Minesweeper {
   private final PImage triggered_mine;
   private final PImage blank;
   private final PImage highlighted_blank;
-  private final PImage[] counter = new PImage[10];
-  private final PImage counter_negative;
-  private final PImage toggle_keyboard;
-  private final PImage toggle_mouse;
+  private final PImage panel;
+  private final PImage[] panel_num = new PImage[10];
+  private final PImage panel_negative;
+  private final PImage new_game_pressed;
+  private final PImage toggle_dn;
+  private final PImage toggle_dn_pressed;
+  private final PImage toggle_up;
+  private final PImage toggle_up_pressed;
   private Tile[][] tile = new Tile[Driver.ROW][Driver.COL];
+  private boolean highlightIsOn;
   private final String start = "start :)";
   private final String alive = "alive ^-^";
   private final String gameOver = "gameOver *~*";
   private final String victory = "victory ^o^";
   private String gameState;
-  // record the state of game progress
   private final String mouse = "mouse";
   private final String keyboard = "keyboard";
   private String gameMode;
-  // store the current input mode
   private int coveredMine;
-  // number of mines left, displayed on top of game board
   private int[] firstMoveLoc;
-  // record the location of the first move, in case its key is not 0 and game has to restart
   private int[] curLoc;
-  // record the current location for keyboard controls or mouse location
-  private char prevKey;
-  // record the previous key input so repeated key input can be ignored
-  public boolean termination = false;
-  // stop drawing if true
-  private int yDisp = 52;
-  // move the game board down. Unit is pixel
+  private char prevKeyPressed;
+  private boolean prevMousePressed;
+  private boolean newGameBtnIsPressed;
+  private boolean ctrlToggleIsPressed;
+  private boolean highlightToggleIsPressed;
+  private boolean endMessageShown;
+  private int time;
+  private Timer timer = new Timer();
+  private final TimerTask task = new TimerTask() {
+    @Override
+    public void run() {
+      if (gameState.equals(alive)) {
+        time += 1;
+      }
+    }
+  };
 
   /**
    * Initialize the above fields and initialize game.
@@ -60,12 +69,25 @@ public class Minesweeper {
    * @param processing - the PApplet to be used here
    */
   public Minesweeper(PApplet processing) {
-    gameState = start;
-    gameMode = keyboard;
     this.processing = processing;
+    time = 0;
+    gameState = start;
+    gameMode = mouse;
+    highlightIsOn = false;
     firstMoveLoc = new int[] {-1, -1};
     curLoc = new int[] {0, 0};
-    prevKey = '\u0000';
+    prevKeyPressed = '\u0000';
+    prevMousePressed = false;
+    newGameBtnIsPressed = false;
+    ctrlToggleIsPressed = false;
+    highlightToggleIsPressed = false;
+    endMessageShown = false;
+    processing.fill(0);
+    processing.rect(Driver.ROW * 16 + 1, 0, 418, Driver.COL * 16);
+    if (Driver.COL < 16) {
+      processing.fill(0);
+      processing.rect(0, Driver.COL * 16 + 1, Driver.ROW * 16, 256 - Driver.COL * 16);
+    }
     for (int i = 0; i < 9; i++) {
       String path = "images" + File.separator + Integer.toString(i) + ".png";
       PImage image = processing.loadImage(path);
@@ -83,14 +105,18 @@ public class Minesweeper {
     triggered_mine = processing.loadImage("images" + File.separator + "triggered_mine.png");
     blank = processing.loadImage("images" + File.separator + "blank.png");
     highlighted_blank = processing.loadImage("images" + File.separator + "highlighted_blank.png");
+    panel = processing.loadImage("images" + File.separator + "panel.png");
+    panel_negative = processing.loadImage("images" + File.separator + "panel_negative.png");
+    new_game_pressed = processing.loadImage("images" + File.separator + "new_game_pressed.png");
+    toggle_dn = processing.loadImage("images" + File.separator + "toggle_dn.png");
+    toggle_dn_pressed = processing.loadImage("images" + File.separator + "toggle_dn_pressed.png");
+    toggle_up = processing.loadImage("images" + File.separator + "toggle_up.png");
+    toggle_up_pressed = processing.loadImage("images" + File.separator + "toggle_up_pressed.png");
     for (int i = 0; i < 10; i++) {
-      String path = "images" + File.separator + "counter_" + Integer.toString(i) + ".png";
+      String path = "images" + File.separator + "panel_" + Integer.toString(i) + ".png";
       PImage image = processing.loadImage(path);
-      counter[i] = image;
+      panel_num[i] = image;
     }
-    counter_negative = processing.loadImage("images" + File.separator + "counter_negative.png");
-    toggle_keyboard = processing.loadImage("images" + File.separator + "toggle_keyboard.png");
-    toggle_mouse = processing.loadImage("images" + File.separator + "toggle_mouse.png");
     initGame();
   }
 
@@ -98,6 +124,7 @@ public class Minesweeper {
    * Initializes the Game
    */
   private void initGame() {
+    time = 0;
     coveredMine = Driver.MINE_COUNT;
     for (int row = 0; row < Driver.ROW; row++) {
       for (int col = 0; col < Driver.COL; col++) {
@@ -165,6 +192,10 @@ public class Minesweeper {
    */
   public void update(int mouseX, int mouseY, boolean mousePressed, int mouseButton,
       char keyPressed) {
+    // keep timer at 0 before first move:
+    if (gameState.equals(start)) {
+      time = 0;
+    }
     // handle first move when game already restarted at least once:
     if (gameState.equals(start) && firstMoveLoc[0] != -1) {
       int row = firstMoveLoc[0];
@@ -172,69 +203,111 @@ public class Minesweeper {
       if (tile[row][col].getKey() == 0) {
         gameState = alive;
         uncoverHelp(row, col);
+        try {
+          timer.scheduleAtFixedRate(task, 0, 1000);
+        } catch (IllegalStateException e) {
+          time = 0;
+        }
       } else {
         initGame();
       }
     }
-    // show game result and terminate:
-    if (gameState.equals(victory)) {
-      JOptionPane.showMessageDialog(null,
-          "Success" + System.lineSeparator() + "Thank you for playing!", "Game Result",
-          JOptionPane.INFORMATION_MESSAGE);
-      termination = true;
-      return;
+    // show game result:
+    if (gameState.equals(victory) && endMessageShown == false) {
+      JOptionPane.showMessageDialog(
+          null, "Congratulations, you have finished in " + time + " seconds"
+              + System.lineSeparator() + "Thank you for playing!",
+          "Game Result", JOptionPane.INFORMATION_MESSAGE);
+      endMessageShown = true;
     }
-    if (gameState.equals(gameOver)) {
-      JOptionPane.showMessageDialog(null,
-          "Failure" + System.lineSeparator() + "Thank you for playing!", "Game Result",
-          JOptionPane.INFORMATION_MESSAGE);
-      termination = true;
-      return;
+    if (gameState.equals(gameOver) && endMessageShown == false) {
+      JOptionPane.showMessageDialog(
+          null, "Better luck next time, you have lasted " + time + " seconds"
+              + System.lineSeparator() + "Thank you for playing!",
+          "Game Result", JOptionPane.INFORMATION_MESSAGE);
+      endMessageShown = true;
     }
-    // clean key input, remove duplicated input:
+    // clean key input by removing duplicated input:
     char key;
-    if (keyPressed == prevKey) {
+    if (keyPressed == prevKeyPressed) {
       key = '\u0000';
     } else {
       key = keyPressed;
-      prevKey = keyPressed;
+      prevKeyPressed = keyPressed;
     }
-    // toggle gameMode:
-    if (key == 't') {
+    // detects mouse release action:
+    boolean mouseReleased = false;
+    if (prevMousePressed == true && mousePressed == false) {
+      mouseReleased = true;
+    } else {
+      mouseReleased = false;
+    }
+    prevMousePressed = mousePressed;
+    // restart game:
+    if (mouseX > Driver.ROW * 16 + 97 && mouseX < Driver.ROW * 16 + 322 && mouseY > 65
+        && mouseY < 129 && mousePressed == true) {
+      newGameBtnIsPressed = true;
+    } else {
+      newGameBtnIsPressed = false;
+    }
+    if (key == 'n' || key == 'N' || mouseX > Driver.ROW * 16 + 97 && mouseX < Driver.ROW * 16 + 322
+        && mouseY > 65 && mouseY < 129 && mouseReleased == true) {
+      gameState = start;
+      firstMoveLoc = new int[] {-1, -1};
+      initGame();
+    }
+    // toggle game control mode:
+    if (mouseX > Driver.ROW * 16 + 1 && mouseX < Driver.ROW * 16 + 418 && mouseY > 129
+        && mouseY < 193 && mousePressed == true) {
+      ctrlToggleIsPressed = true;
+    } else {
+      ctrlToggleIsPressed = false;
+    }
+    if (key == 'c' || key == 'C' || mouseX > Driver.ROW * 16 + 1 && mouseX < Driver.ROW * 16 + 418
+        && mouseY > 129 && mouseY < 194 && mouseReleased == true) {
       if (gameMode.equals(keyboard)) {
         gameMode = mouse;
-        for (int r = 0; r < Driver.ROW; r++) {
-          for (int c = 0; c < Driver.COL; c++) {
-            tile[r][c].setIsHighlighted(false);
-          }
-        }
       } else {
         gameMode = keyboard;
       }
-    }
-    if (mouseX > 81 && mouseX < 301 && mouseY > 0 && mouseY < 26 && mousePressed == true) {
-      gameMode = mouse;
       for (int r = 0; r < Driver.ROW; r++) {
         for (int c = 0; c < Driver.COL; c++) {
           tile[r][c].setIsHighlighted(false);
         }
       }
     }
-    if (mouseX > 81 && mouseX < 301 && mouseY > 26 && mouseY < 52 && mousePressed == true) {
-      gameMode = keyboard;
+    // toggle highlight:
+    if (mouseX > Driver.ROW * 16 + 1 && mouseX < Driver.ROW * 16 + 418 && mouseY > 193
+        && mouseY < 258 && mousePressed == true) {
+      highlightToggleIsPressed = true;
+    } else {
+      highlightToggleIsPressed = false;
+    }
+    if (key == 'h' || key == 'H' || mouseX > Driver.ROW * 16 + 1 && mouseX < Driver.ROW * 16 + 418
+        && mouseY > 193 && mouseY < 258 && mouseReleased == true) {
+      if (highlightIsOn == true) {
+        highlightIsOn = false;
+        for (int r = 0; r < Driver.ROW; r++) {
+          for (int c = 0; c < Driver.COL; c++) {
+            tile[r][c].setIsHighlighted(false);
+          }
+        }
+      } else {
+        highlightIsOn = true;
+      }
     }
     // handle highlight:
-    if (gameMode.equals(keyboard)) {
-      if (key == 'w' && curLoc[1] > 0) {
+    if (highlightIsOn && gameMode.equals(keyboard)) {
+      if (key == 'w' || key == 'W' && curLoc[1] > 0) {
         curLoc[1] -= 1;
       }
-      if (key == 'a' && curLoc[0] > 0) {
+      if (key == 'a' || key == 'A' && curLoc[0] > 0) {
         curLoc[0] -= 1;
       }
-      if (key == 's' && curLoc[1] < Driver.COL - 1) {
+      if (key == 's' || key == 'S' && curLoc[1] < Driver.COL - 1) {
         curLoc[1] += 1;
       }
-      if (key == 'd' && curLoc[0] < Driver.ROW - 1) {
+      if (key == 'd' || key == 'D' && curLoc[0] < Driver.ROW - 1) {
         curLoc[0] += 1;
       }
       for (int r = 0; r < Driver.ROW; r++) {
@@ -254,19 +327,23 @@ public class Minesweeper {
         }
       }
     }
-    if (gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.ROW * 16 + 1 && mouseY > yDisp
-        && mouseY < Driver.COL * 16 + 1 + yDisp && mousePressed == true && mouseButton == 37) {
+    if (highlightIsOn && gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.ROW * 16 + 1
+        && mouseY > 0 && mouseY < Driver.COL * 16 + 1 && mousePressed == true
+        && mouseButton == 37) {
       for (int r = 0; r < Driver.ROW; r++) {
         for (int c = 0; c < Driver.COL; c++) {
           tile[r][c].setIsHighlighted(false);
         }
       }
       int row = (mouseX - 1) / 16;
-      int col = (mouseY - yDisp - 1) / 16;
+      int col = (mouseY - 1) / 16;
+      tile[row][col].setIsHighlighted(true);
       if (tile[row][col].getState() == Display.UNCOVERED) {
         int neighbor[][] = neighbors(row, col);
         for (int i = 0; i < 8; i++) {
-          if (neighbor[i][0] != -1) {
+          if (neighbor[i][0] != -1
+              && (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.COVERED
+                  || tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.FLAG)) {
             tile[neighbor[i][0]][neighbor[i][1]].setIsHighlighted(true);
           }
         }
@@ -279,6 +356,11 @@ public class Minesweeper {
           if (tile[curLoc[0]][curLoc[1]].getKey() == 0) {
             gameState = alive;
             uncoverHelp(curLoc[0], curLoc[1]);
+            try {
+              timer.scheduleAtFixedRate(task, 0, 1000);
+            } catch (IllegalStateException e) {
+              time = 0;
+            }
           } else {
             firstMoveLoc[0] = curLoc[0];
             firstMoveLoc[1] = curLoc[1];
@@ -286,14 +368,19 @@ public class Minesweeper {
           }
         }
       }
-      if (gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.ROW * 16 + 1 && mouseY > yDisp
-          && mouseY < Driver.COL * 16 + 1 + yDisp) {
+      if (gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.ROW * 16 + 1 && mouseY > 0
+          && mouseY < Driver.COL * 16 + 1) {
         int row = (mouseX - 1) / 16;
-        int col = (mouseY - yDisp - 1) / 16;
-        if (mousePressed == true && mouseButton == 37) {
+        int col = (mouseY - 1) / 16;
+        if (mouseReleased == true && mouseButton == 37) {
           if (tile[row][col].getKey() == 0) {
             gameState = alive;
             uncoverHelp(row, col);
+            try {
+              timer.scheduleAtFixedRate(task, 0, 1000);
+            } catch (IllegalStateException e) {
+              time = 0;
+            }
           } else {
             firstMoveLoc[0] = row;
             firstMoveLoc[1] = col;
@@ -334,11 +421,11 @@ public class Minesweeper {
           uncoverHelp(curLoc[0], curLoc[1]);
         }
       }
-      if (gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.ROW * 16 + 1 && mouseY > yDisp
-          && mouseY < Driver.COL * 16 + 1 + yDisp) {
+      if (gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.ROW * 16 + 1 && mouseY > 0
+          && mouseY < Driver.COL * 16 + 1) {
         int row = (mouseX - 1) / 16;
-        int col = (mouseY - yDisp - 1) / 16;
-        if (mousePressed == true && mouseButton == 39
+        int col = (mouseY - 1) / 16;
+        if (mouseReleased == true && mouseButton == 39
             && tile[row][col].getState() == Display.COVERED) {
           tile[row][col].setState(Display.FLAG);
           coveredMine -= 1;
@@ -348,7 +435,8 @@ public class Minesweeper {
             }
           }
         }
-        if (mousePressed == true && mouseButton == 3 && tile[row][col].getState() == Display.FLAG) {
+        if (mouseReleased == true && mouseButton == 3
+            && tile[row][col].getState() == Display.FLAG) {
           tile[row][col].setState(Display.COVERED);
           coveredMine += 1;
           for (int r = 0; r < Driver.ROW; r++) {
@@ -357,7 +445,7 @@ public class Minesweeper {
             }
           }
         }
-        if (mousePressed == true && mouseButton == 37) {
+        if (mouseReleased == true && mouseButton == 37) {
           uncoverHelp(row, col);
         }
       }
@@ -530,60 +618,101 @@ public class Minesweeper {
    * according to its displayed state.
    */
   private void draw() {
+    // display panel:
+    processing.image(panel, Driver.ROW * 16 + 1, 1);
     // display counter:
-    if (coveredMine > -1 && coveredMine < 1000) {
-      processing.image(counter[coveredMine / 100], 1, 1);
-      processing.image(counter[coveredMine % 100 / 10], 28, 1);
-      processing.image(counter[coveredMine % 10], 55, 1);
+    if (coveredMine > -1 && coveredMine < 10000) {
+      processing.image(panel_num[coveredMine / 1000], Driver.ROW * 16 + 65, 10);
+      processing.image(panel_num[coveredMine % 1000 / 100], Driver.ROW * 16 + 92, 10);
+      processing.image(panel_num[coveredMine % 100 / 10], Driver.ROW * 16 + 119, 10);
+      processing.image(panel_num[coveredMine % 10], Driver.ROW * 16 + 146, 10);
     } else if (-1 * coveredMine / 1000 == 0) {
-      processing.image(counter_negative, 1, 1);
-      processing.image(counter[-1 * coveredMine % 100 / 10], 28, 1);
-      processing.image(counter[-1 * coveredMine % 10], 55, 1);
+      processing.image(panel_negative, Driver.ROW * 16 + 65, 10);
+      processing.image(panel_num[-1 * coveredMine % 1000 / 100], Driver.ROW * 16 + 92, 10);
+      processing.image(panel_num[-1 * coveredMine % 100 / 10], Driver.ROW * 16 + 119, 10);
+      processing.image(panel_num[-1 * coveredMine % 10], Driver.ROW * 16 + 146, 10);
     } else {
-      processing.image(counter_negative, 1, 1);
-      processing.image(counter_negative, 28, 1);
-      processing.image(counter_negative, 55, 1);
+      processing.image(panel_negative, Driver.ROW * 16 + 65, 10);
+      processing.image(panel_negative, Driver.ROW * 16 + 92, 10);
+      processing.image(panel_negative, Driver.ROW * 16 + 119, 10);
+      processing.image(panel_negative, Driver.ROW * 16 + 146, 10);
+    }
+    // display timer:
+    if (time < 10000) {
+      processing.image(panel_num[time / 1000], Driver.ROW * 16 + 302, 10);
+      processing.image(panel_num[time % 1000 / 100], Driver.ROW * 16 + 329, 10);
+      processing.image(panel_num[time % 100 / 10], Driver.ROW * 16 + 356, 10);
+      processing.image(panel_num[time % 10], Driver.ROW * 16 + 383, 10);
+    } else {
+      processing.image(panel_negative, Driver.ROW * 16 + 302, 10);
+      processing.image(panel_negative, Driver.ROW * 16 + 329, 10);
+      processing.image(panel_negative, Driver.ROW * 16 + 356, 10);
+      processing.image(panel_negative, Driver.ROW * 16 + 383, 10);
+    }
+    // display new game button:
+    if (newGameBtnIsPressed) {
+      processing.image(new_game_pressed, Driver.ROW * 16 + 97, 65);
+    }
+    // display control toggle:
+    if (gameMode.equals(mouse)) {
+      if (ctrlToggleIsPressed) {
+        processing.image(toggle_up_pressed, Driver.ROW * 16 + 10, 141);
+      } else {
+        processing.image(toggle_up, Driver.ROW * 16 + 10, 141);
+      }
     }
     if (gameMode.equals(keyboard)) {
-      processing.image(toggle_keyboard, 82, 1);
+      if (ctrlToggleIsPressed) {
+        processing.image(toggle_dn_pressed, Driver.ROW * 16 + 10, 141);
+      } else {
+        processing.image(toggle_dn, Driver.ROW * 16 + 10, 141);
+      }
     }
-    if (gameMode.equals(mouse)) {
-      processing.image(toggle_mouse, 82, 1);
+    // display highlight toggle:
+    if (highlightIsOn) {
+      if (highlightToggleIsPressed) {
+        processing.image(toggle_dn_pressed, Driver.ROW * 16 + 10, 205);
+      } else {
+        processing.image(toggle_dn, Driver.ROW * 16 + 10, 205);
+      }
+    } else {
+      if (highlightToggleIsPressed) {
+        processing.image(toggle_up_pressed, Driver.ROW * 16 + 10, 205);
+      } else {
+        processing.image(toggle_up, Driver.ROW * 16 + 10, 205);
+      }
     }
-    processing.fill(0);
-    processing.rect(300, 1, Driver.ROW * 16 - 300, 50);
     // display game board:
     for (int row = 0; row < Driver.ROW; row++) {
       for (int col = 0; col < Driver.COL; col++) {
         if (tile[row][col].getState() == Display.COVERED) {
           if (tile[row][col].getIsHighlighted() == false) {
-            processing.image(blank, row * 16 + 1, col * 16 + 1 + yDisp);
+            processing.image(blank, row * 16 + 1, col * 16 + 1);
           } else {
-            processing.image(highlighted_blank, row * 16 + 1, col * 16 + 1 + yDisp);
+            processing.image(highlighted_blank, row * 16 + 1, col * 16 + 1);
           }
         }
         if (tile[row][col].getState() == Display.UNCOVERED) {
           if (tile[row][col].getKey() == 9) {
-            processing.image(mine, row * 16 + 1, col * 16 + 1 + yDisp);
+            processing.image(mine, row * 16 + 1, col * 16 + 1);
           } else if (tile[row][col].getIsHighlighted() == false) {
-            processing.image(num[tile[row][col].getKey()], row * 16 + 1, col * 16 + 1 + yDisp);
+            processing.image(num[tile[row][col].getKey()], row * 16 + 1, col * 16 + 1);
           } else {
-            processing.image(highlighted_num[tile[row][col].getKey()], row * 16 + 1,
-                col * 16 + 1 + yDisp);
+            processing.image(highlighted_num[tile[row][col].getKey()], row * 16 + 1, col * 16 + 1);
           }
         }
         if (tile[row][col].getState() == Display.FLAG) {
           if (tile[row][col].getIsHighlighted() == false) {
-            processing.image(flag, row * 16 + 1, col * 16 + 1 + yDisp);
+            processing.image(flag, row * 16 + 1, col * 16 + 1);
           } else {
-            processing.image(highlighted_flag, row * 16 + 1, col * 16 + 1 + yDisp);
+            processing.image(highlighted_flag, row * 16 + 1, col * 16 + 1);
           }
         }
         if (tile[row][col].getState() == Display.TRIGGERED_MINE) {
-          processing.image(triggered_mine, row * 16 + 1, col * 16 + 1 + yDisp);
+          processing.image(triggered_mine, row * 16 + 1, col * 16 + 1);
         }
         if (tile[row][col].getState() == Display.BAD_FLAG) {
-          processing.image(bad_flag, row * 16 + 1, col * 16 + 1 + yDisp);
+          processing.image(bad_flag, row * 16 + 1, col * 16 + 1);
         }
       }
     }

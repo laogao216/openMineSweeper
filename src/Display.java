@@ -1,7 +1,7 @@
 ///////////////////////////////////////// 100 COLUMNS WIDE /////////////////////////////////////////
 
 /**
- * This Enumeration groups the name of constants representing the displayed states of tiles
+ * This Enumeration groups the name of constants representing the displayed states of tiles.
  *
  * @author laogao216
  */

@@ -10,11 +10,13 @@ If you haven't played minesweer yet, you can look up its rules and strategies or
 4. execute Mines.jar
 
 # Game controls: 
-To start a new game press 'n' or click on "NEW GAME" from the right-hand panel.
+To start a new game, press 'n' or click on "NEW GAME" from the right-hand panel.
 
-To toggle between mouse and keyboard control press 'c' or click on "MOUSE/KEYBOARD CONTROL" from the right-hand panel.
+To return to menu to reselect difficulty, press 'm' or click on "MENU" from the right-hand panel.
 
-To toggle highlight press 'h' or click on "HIDE/SHOW HIGHLIGHT" from the right-hand panel.
+To toggle between mouse and keyboard control, press 'c' or click on "MOUSE/KEYBOARD CONTROL" from the right-hand panel.
+
+To toggle highlight, press 'h' or click on "HIDE/SHOW HIGHLIGHT" from the right-hand panel.
 
 ### *keyboard control*
 'w', 'a', 's', 'd' for moving the highlighted tile around.

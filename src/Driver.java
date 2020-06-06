@@ -1,10 +1,5 @@
 ///////////////////////////////////////// 100 COLUMNS WIDE /////////////////////////////////////////
 
-// Light as feather I touch you so slight.
-// Out of darkness comes your brilliant light.
-// Violent as fire we share our delight.
-// Euphoria dissipates to the night.
-
 import java.awt.Toolkit;
 import javax.swing.JOptionPane;
 import processing.core.PApplet;

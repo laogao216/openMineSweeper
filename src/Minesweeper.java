@@ -1,6 +1,8 @@
 ///////////////////////////////////////// 100 COLUMNS WIDE /////////////////////////////////////////
 
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
 import java.util.Random;
 import javax.swing.JOptionPane;
 import processing.core.PApplet;
@@ -29,6 +31,7 @@ public class Minesweeper {
   private final PImage[] panel_num = new PImage[10];
   private final PImage panel_negative;
   private final PImage new_game_pressed;
+  private final PImage menu_pressed;
   private final PImage toggle_dn;
   private final PImage toggle_dn_pressed;
   private final PImage toggle_up;
@@ -49,6 +52,7 @@ public class Minesweeper {
   private char prevKeyPressed;
   private boolean prevMousePressed;
   private boolean newGameBtnIsPressed;
+  private boolean menuBtnIsPressed;
   private boolean ctrlToggleIsPressed;
   private boolean highlightToggleIsPressed;
   private boolean endMessageShown;
@@ -79,6 +83,7 @@ public class Minesweeper {
     prevKeyPressed = '\u0000';
     prevMousePressed = false;
     newGameBtnIsPressed = false;
+    menuBtnIsPressed = false;
     ctrlToggleIsPressed = false;
     highlightToggleIsPressed = false;
     endMessageShown = false;
@@ -108,6 +113,7 @@ public class Minesweeper {
     panel = processing.loadImage("images" + File.separator + "panel.png");
     panel_negative = processing.loadImage("images" + File.separator + "panel_negative.png");
     new_game_pressed = processing.loadImage("images" + File.separator + "new_game_pressed.png");
+    menu_pressed = processing.loadImage("images" + File.separator + "menu_pressed.png");
     toggle_dn = processing.loadImage("images" + File.separator + "toggle_dn.png");
     toggle_dn_pressed = processing.loadImage("images" + File.separator + "toggle_dn_pressed.png");
     toggle_up = processing.loadImage("images" + File.separator + "toggle_up.png");
@@ -244,17 +250,34 @@ public class Minesweeper {
     }
     prevMousePressed = mousePressed;
     // restart game:
-    if (mouseX > Driver.ROW * 16 + 97 && mouseX < Driver.ROW * 16 + 322 && mouseY > 65
+    if (mouseX > Driver.ROW * 16 + 1 && mouseX < Driver.ROW * 16 + 209 && mouseY > 65
         && mouseY < 129 && mousePressed == true) {
       newGameBtnIsPressed = true;
     } else {
       newGameBtnIsPressed = false;
     }
-    if (key == 'n' || key == 'N' || mouseX > Driver.ROW * 16 + 97 && mouseX < Driver.ROW * 16 + 322
+    if (key == 'n' || key == 'N' || mouseX > Driver.ROW * 16 + 1 && mouseX < Driver.ROW * 16 + 209
         && mouseY > 65 && mouseY < 129 && mouseReleased == true) {
       gameState = start;
       firstMoveLoc = new int[] {-1, -1};
       initGame();
+    }
+    // Back to menu:
+    if (mouseX > Driver.ROW * 16 + 210 && mouseX < Driver.ROW * 16 + 418 && mouseY > 65
+        && mouseY < 129 && mousePressed == true) {
+      menuBtnIsPressed = true;
+    } else {
+      menuBtnIsPressed = false;
+    }
+    if (key == 'm' || key == 'M' || mouseX > Driver.ROW * 16 + 210 && mouseX < Driver.ROW * 16 + 418
+        && mouseY > 65 && mouseY < 129 && mouseReleased == true) {
+      processing.exit();
+      File jar = new File("mines.jar");
+      try {
+        Desktop.getDesktop().open(jar);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
     // toggle game control mode:
     if (mouseX > Driver.ROW * 16 + 1 && mouseX < Driver.ROW * 16 + 418 && mouseY > 129
@@ -352,7 +375,7 @@ public class Minesweeper {
     // handle first move for the first time:
     if (gameState.equals(start) && firstMoveLoc[0] == -1) {
       if (gameMode.equals(keyboard)) {
-        if (key == 'j') {
+        if (key == 'j' || key == 'J') {
           if (tile[curLoc[0]][curLoc[1]].getKey() == 0) {
             gameState = alive;
             uncoverHelp(curLoc[0], curLoc[1]);
@@ -409,15 +432,16 @@ public class Minesweeper {
       }
       // process flagging and uncovering:
       if (gameMode.equals(keyboard)) {
-        if (key == 'k' && tile[curLoc[0]][curLoc[1]].getState() == Display.COVERED) {
+        if ((key == 'k' || key == 'K')
+            && tile[curLoc[0]][curLoc[1]].getState() == Display.COVERED) {
           tile[curLoc[0]][curLoc[1]].setState(Display.FLAG);
           coveredMine -= 1;
         }
-        if (key == 'l' && tile[curLoc[0]][curLoc[1]].getState() == Display.FLAG) {
+        if ((key == 'l' || key == 'L') && tile[curLoc[0]][curLoc[1]].getState() == Display.FLAG) {
           tile[curLoc[0]][curLoc[1]].setState(Display.COVERED);
           coveredMine += 1;
         }
-        if (key == 'j') {
+        if (key == 'j' || key == 'J') {
           uncoverHelp(curLoc[0], curLoc[1]);
         }
       }
@@ -651,7 +675,11 @@ public class Minesweeper {
     }
     // display new game button:
     if (newGameBtnIsPressed) {
-      processing.image(new_game_pressed, Driver.ROW * 16 + 97, 65);
+      processing.image(new_game_pressed, Driver.ROW * 16 + 1, 65);
+    }
+    // display new game button:
+    if (menuBtnIsPressed) {
+      processing.image(menu_pressed, Driver.ROW * 16 + 210, 65);
     }
     // display control toggle:
     if (gameMode.equals(mouse)) {

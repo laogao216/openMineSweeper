@@ -14,6 +14,12 @@ To start a new game, press 'n' or click on "NEW GAME" from the right-hand panel.
 
 To return to menu to reselect difficulty, press 'm' or click on "MENU" from the right-hand panel.
 
+To pause or continue, press 'p' or click on "PAUSE / CONTINUE" from the right-hand panel.
+
+To save current game, press 's' or click on "SAVE" from the right-hand panel.
+
+To save current game, press 'l' or click on "LOAD" from the right-hand panel.
+
 To toggle between mouse and keyboard control, press 'c' or click on "MOUSE/KEYBOARD CONTROL" from the right-hand panel.
 
 To toggle highlight, press 'h' or click on "HIDE/SHOW HIGHLIGHT" from the right-hand panel.

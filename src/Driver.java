@@ -32,7 +32,7 @@ public class Driver extends PApplet {
         String message = "Easy: 10*10, 10 mines" + System.lineSeparator()
             + "Normal: 20*20, 60 mines" + System.lineSeparator() + "Hard: 50*50, 500 mines";
         int input = JOptionPane.showOptionDialog(null, message, "Choose Difficulty Level",
-            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[3]);
         if (input == 0) {
           ROW = (int) saved[1];
           COL = (int) saved[2];

@@ -262,14 +262,14 @@ public class Minesweeper {
     // show game result:
     if (gameState == victory && endMessageShown == false) {
       JOptionPane.showMessageDialog(
-          null, "Congratulations, you have finished in " + time + " seconds"
+          null, "Congratulations, you have finished in " + time / 1000 + " seconds"
               + System.lineSeparator() + "Thank you for playing!",
           "Game Result", JOptionPane.INFORMATION_MESSAGE);
       endMessageShown = true;
     }
     if (gameState == gameOver && endMessageShown == false) {
       JOptionPane.showMessageDialog(
-          null, "Better luck next time, you have lasted " + time + " seconds"
+          null, "Better luck next time, you have lasted " + time / 1000 + " seconds"
               + System.lineSeparator() + "Thank you for playing!",
           "Game Result", JOptionPane.INFORMATION_MESSAGE);
       endMessageShown = true;
@@ -312,6 +312,7 @@ public class Minesweeper {
       if (input == 0) {
         gameState = start;
         firstMoveLoc = new int[] {-1, -1};
+        endMessageShown = false;
         initGame();
       } else if (gameState == paused) {
         gameState = alive;

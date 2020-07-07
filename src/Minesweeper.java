@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Scanner;
 import javax.swing.JOptionPane;
@@ -42,7 +43,7 @@ public class Minesweeper {
   private final PImage toggle_dn_pressed;
   private final PImage toggle_up;
   private final PImage toggle_up_pressed;
-  private Tile[][] tile = new Tile[Driver.ROW][Driver.COL];
+  private Tile[][] tile = new Tile[Driver.getRow()][Driver.getCol()];
   private boolean highlightIsOn;
   private final int start = 0;
   private final int alive = 1;
@@ -101,10 +102,11 @@ public class Minesweeper {
     highlightToggleHighlight = false;
     endMessageShown = false;
     processing.fill(0);
-    processing.rect(Driver.ROW * 16 + 1, 1, 418, Driver.COL * 16);
-    if (Driver.COL < 24) {
+    processing.rect(Driver.getRow() * 16 + 1, 1, 418, Driver.getCol() * 16);
+    if (Driver.getCol() < 24) {
       processing.fill(0);
-      processing.rect(0, Driver.COL * 16 + 1, Driver.ROW * 16, 384 - Driver.COL * 16);
+      processing.rect(0, Driver.getCol() * 16 + 1, Driver.getRow() * 16,
+          384 - Driver.getCol() * 16);
     }
     for (int i = 0; i < 9; i++) {
       String path = "images" + File.separator + Integer.toString(i) + ".png";
@@ -148,123 +150,79 @@ public class Minesweeper {
    * Initializes the Game
    */
   private void initGame() {
-    for (int row = 0; row < Driver.ROW; row++) {
-      for (int col = 0; col < Driver.COL; col++) {
+    for (int row = 0; row < Driver.getRow(); row++) {
+      for (int col = 0; col < Driver.getCol(); col++) {
         tile[row][col] = new Tile();
       }
     }
-    Scanner scanner;
-    String str = "";
     try {
-      scanner = new Scanner(new File("save.txt"));
-      str = scanner.nextLine();
-      scanner.close();
-    } catch (FileNotFoundException e) {
-      JOptionPane.showMessageDialog(null, "Cannot find save.txt", "Error",
-          JOptionPane.ERROR_MESSAGE);
-    }
-    if (str.charAt(0) == '0') {
-      coveredMine = Driver.MINE_COUNT;
-      time = 0;
-      boolean[][] seatAvailable = new boolean[Driver.ROW][Driver.COL];
-      for (int row = 0; row < Driver.ROW; row++) {
-        for (int col = 0; col < Driver.COL; col++) {
-          seatAvailable[row][col] = true;
+      Object[] saved = txtParseHelp();
+      if ((boolean) saved[0]) {
+        gameState = paused;
+        coveredMine = (int) saved[4];
+        time = (int) saved[5];
+        tile = (Tile[][]) saved[6];
+        try {
+          timer.scheduleAtFixedRate(task, 0, 1);
+        } catch (IllegalStateException e) {
+          e.printStackTrace();
         }
-      }
-      if (firstMoveLoc[0] != -1) {
-        seatAvailable[firstMoveLoc[0]][firstMoveLoc[1]] = false;
-        int neighbor[][] = neighbors(firstMoveLoc[0], firstMoveLoc[1]);
-        for (int i = 0; i < 8; i++) {
-          if (neighbor[i][0] != -1) {
-            seatAvailable[neighbor[i][0]][neighbor[i][1]] = false;
-          }
-        }
-      }
-      for (int i = 0; i < Driver.MINE_COUNT; i++) {
-        Random random = new Random();
-        int row = random.nextInt() % Driver.ROW;
-        if (row < 0) {
-          row = row * -1;
-        }
-        int col = random.nextInt() % Driver.COL;
-        if (col < 0) {
-          col = col * -1;
-        }
-        if (seatAvailable[row][col] == true) {
-          tile[row][col].setKey(9);
-          seatAvailable[row][col] = false;
-        } else {
-          i -= 1;
-        }
-      }
-      for (int row = 0; row < Driver.ROW; row++) {
-        for (int col = 0; col < Driver.COL; col++) {
-          if (tile[row][col].getKey() != 9) {
-            int count = 0;
-            int neighbor[][] = neighbors(row, col);
-            for (int i = 0; i < 8; i++) {
-              if (neighbor[i][0] != -1 && tile[neighbor[i][0]][neighbor[i][1]].getKey() == 9) {
-                count += 1;
-              }
-            }
-            tile[row][col].setKey(count);
-          }
-        }
-      }
-    } else {
-      gameState = alive;
-      coveredMine = Driver.SAVED_COVERED_MINE;
-      time = Driver.SAVED_TIME;
-      try {
-        timer.scheduleAtFixedRate(task, 0, 1000);
-      } catch (IllegalStateException e) {
+        txtCompileHelp(false, Driver.getRow(), Driver.getCol(), Driver.getMineCount(), coveredMine,
+            time, tile);
+      } else {
+        coveredMine = Driver.getMineCount();
         time = 0;
-      }
-      String save = Driver.SAVED;
-      save = save.substring(save.indexOf('{') + 1, save.indexOf('}'));
-      String[] saveRowArr = save.split("], ");
-      System.out.println(saveRowArr);
-      for (int col = 0; col < Driver.COL; col++) {
-        String saveRow = saveRowArr[col];
-        if (saveRow.charAt(0) == '[') {
-          saveRow = saveRow.substring(1);
+        boolean[][] seatAvailable = new boolean[Driver.getRow()][Driver.getCol()];
+        for (int row = 0; row < Driver.getRow(); row++) {
+          for (int col = 0; col < Driver.getCol(); col++) {
+            seatAvailable[row][col] = true;
+          }
         }
-        if (saveRow.charAt(saveRow.length() - 1) == ']') {
-          saveRow = saveRow.substring(0, saveRow.length() - 1);
+        if (firstMoveLoc[0] != -1) {
+          seatAvailable[firstMoveLoc[0]][firstMoveLoc[1]] = false;
+          int neighbor[][] = neighbors(firstMoveLoc[0], firstMoveLoc[1]);
+          for (int i = 0; i < 8; i++) {
+            if (neighbor[i][0] != -1) {
+              seatAvailable[neighbor[i][0]][neighbor[i][1]] = false;
+            }
+          }
         }
-        String[] saveTileArr = saveRow.split(", ");
-        for (int row = 0; row < Driver.ROW; row++) {
-          String saveTile = saveTileArr[row];
-          tile[row][col].setKey(Integer.parseInt(saveTile.substring(1, 2)));
-          if (saveTile.charAt(4) == '1') {
+        for (int i = 0; i < Driver.getMineCount(); i++) {
+          Random random = new Random();
+          int row = random.nextInt() % Driver.getRow();
+          if (row < 0) {
+            row = row * -1;
+          }
+          int col = random.nextInt() % Driver.getCol();
+          if (col < 0) {
+            col = col * -1;
+          }
+          if (seatAvailable[row][col] == true) {
+            tile[row][col].setKey(9);
+            seatAvailable[row][col] = false;
+          } else {
+            i -= 1;
+          }
+        }
+        for (int row = 0; row < Driver.getRow(); row++) {
+          for (int col = 0; col < Driver.getCol(); col++) {
             if (tile[row][col].getKey() != 9) {
-              tile[row][col].setState(Display.UNCOVERED);
-            } else {
-              tile[row][col].setState(Display.FLAG);
+              int count = 0;
+              int neighbor[][] = neighbors(row, col);
+              for (int i = 0; i < 8; i++) {
+                if (neighbor[i][0] != -1 && tile[neighbor[i][0]][neighbor[i][1]].getKey() == 9) {
+                  count += 1;
+                }
+              }
+              tile[row][col].setKey(count);
             }
           }
         }
       }
-      Scanner reader;
-      String prevSave = "";
-      try {
-        reader = new Scanner(new File("save.txt"));
-        prevSave = reader.nextLine();
-        reader.close();
-      } catch (FileNotFoundException e) {
-        JOptionPane.showMessageDialog(null, "Cannot find save.txt", "Error",
-            JOptionPane.ERROR_MESSAGE);
-      }
-      prevSave = prevSave.replaceFirst("1", "0");
-      try {
-        FileWriter writer = new FileWriter("save.txt");
-        writer.write(prevSave);
-        writer.close();
-      } catch (IOException e) {
-        JOptionPane.showMessageDialog(null, "Cannot access save.txt", "Error",
-            JOptionPane.ERROR_MESSAGE);
-      }
+    } catch (IOException e) {
+      JOptionPane.showMessageDialog(null,
+          "ERROR 100" + System.lineSeparator() + "Cannot parse save.txt", "File Corruption",
+          JOptionPane.ERROR_MESSAGE);
     }
     draw();
   }
@@ -293,7 +251,7 @@ public class Minesweeper {
         gameState = alive;
         uncoverHelp(row, col);
         try {
-          timer.scheduleAtFixedRate(task, 0, 1000);
+          timer.scheduleAtFixedRate(task, 0, 1);
         } catch (IllegalStateException e) {
           time = 0;
         }
@@ -333,14 +291,16 @@ public class Minesweeper {
     }
     prevMousePressed = mousePressed;
     // handle restart game:
-    if (mouseX > Driver.ROW * 16 + 3 && mouseX < Driver.ROW * 16 + 208 && mouseY > 64
+    if (mouseX > Driver.getRow() * 16 + 3 && mouseX < Driver.getRow() * 16 + 208 && mouseY > 64
         && mouseY < 127 && mousePressed == true && gameState != start) {
       newGameBtnHighlight = true;
     } else {
       newGameBtnHighlight = false;
     }
-    if ((key == 'n' || key == 'N' || mouseX > Driver.ROW * 16 + 3 && mouseX < Driver.ROW * 16 + 208
-        && mouseY > 64 && mouseY < 127 && mouseReleased == true) && gameState != start) {
+    if ((key == 'n' || key == 'N'
+        || mouseX > Driver.getRow() * 16 + 3 && mouseX < Driver.getRow() * 16 + 208 && mouseY > 64
+            && mouseY < 127 && mouseReleased == true)
+        && gameState != start) {
       if (gameState == alive) {
         gameState = paused;
       }
@@ -358,14 +318,16 @@ public class Minesweeper {
       }
     }
     // handle back to menu:
-    if (mouseX > Driver.ROW * 16 + 210 && mouseX < Driver.ROW * 16 + 415 && mouseY > 64
+    if (mouseX > Driver.getRow() * 16 + 210 && mouseX < Driver.getRow() * 16 + 415 && mouseY > 64
         && mouseY < 127 && mousePressed == true) {
       menuBtnHighlight = true;
     } else {
       menuBtnHighlight = false;
     }
-    if (key == 'm' || key == 'M' || mouseX > Driver.ROW * 16 + 210 && mouseX < Driver.ROW * 16 + 415
-        && mouseY > 64 && mouseY < 127 && mouseReleased == true) {
+    if (key == 'm' || key == 'M'
+        || mouseX > Driver.getRow() * 16 + 210 && mouseX < Driver.getRow() * 16 + 415 && mouseY > 64
+            && mouseY < 127 && mouseReleased == true) {
+      int tempState = gameState;
       gameState = paused;
       int input;
       String message = "Progress of this game will be lost if not saved" + System.lineSeparator()
@@ -378,22 +340,23 @@ public class Minesweeper {
         try {
           Desktop.getDesktop().open(jar);
         } catch (IOException e) {
-          JOptionPane.showMessageDialog(null, "Cannot launch mines.jar", "Error",
+          JOptionPane.showMessageDialog(null,
+              "Error 200" + System.lineSeparator() + "Cannot launch mines.jar", "File Missing",
               JOptionPane.ERROR_MESSAGE);
         }
       } else {
-        gameState = alive;
+        gameState = tempState;
       }
     }
     // handle pause:
-    if (mouseX > Driver.ROW * 16 + 3 && mouseX < Driver.ROW * 16 + 415 && mouseY > 129
+    if (mouseX > Driver.getRow() * 16 + 3 && mouseX < Driver.getRow() * 16 + 415 && mouseY > 129
         && mouseY < 192 && mousePressed == true && gameState == alive || gameState == paused) {
       pauseBtnHighlight = true;
     } else {
       pauseBtnHighlight = false;
     }
     if ((key == 'p' || key == 'P'
-        || mouseX > Driver.ROW * 16 + 3 && mouseX < Driver.ROW * 16 + 415 && mouseY > 129
+        || mouseX > Driver.getRow() * 16 + 3 && mouseX < Driver.getRow() * 16 + 415 && mouseY > 129
             && mouseY < 192 && mouseReleased == true)
         && (gameState == alive || gameState == paused)) {
       if (gameState == paused) {
@@ -403,16 +366,17 @@ public class Minesweeper {
       }
     }
     // handle save game:
-    if (mouseX > Driver.ROW * 16 + 3 && mouseX < Driver.ROW * 16 + 208 && mouseY > 194
+    if (mouseX > Driver.getRow() * 16 + 3 && mouseX < Driver.getRow() * 16 + 208 && mouseY > 194
         && mouseY < 257 && mousePressed == true && (gameState == alive || gameState == paused)) {
       saveBtnHighlight = true;
     } else {
       saveBtnHighlight = false;
     }
     if ((key == 's' || key == 'S'
-        || mouseX > Driver.ROW * 16 + 3 && mouseX < Driver.ROW * 16 + 208 && mouseY > 194
+        || mouseX > Driver.getRow() * 16 + 3 && mouseX < Driver.getRow() * 16 + 208 && mouseY > 194
             && mouseY < 257 && mouseReleased == true)
         && (gameState == alive || gameState == paused)) {
+      int tempState = gameState;
       gameState = paused;
       int input;
       String message = "Previously saved game would be overwritten" + System.lineSeparator()
@@ -420,122 +384,87 @@ public class Minesweeper {
       input = JOptionPane.showConfirmDialog(null, message, "Confirmation",
           JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
       if (input == 0) {
-        String save =
-            "0, " + new Integer(Driver.ROW).toString() + ", " + new Integer(Driver.COL).toString()
-                + ", " + new Integer(Driver.MINE_COUNT).toString() + ", "
-                + new Integer(coveredMine).toString() + ", " + new Integer(time).toString() + ", ";
-        save += "{";
-        for (int col = 0; col < Driver.COL; col++) {
-          save += "[";
-          for (int row = 0; row < Driver.ROW; row++) {
-            save = save + "(" + new Integer(tile[row][col].getKey()).toString();
-            if (tile[row][col].getState() == Display.COVERED) {
-              save += ": 0)";
-            } else {
-              save += ": 1)";
-            }
-            if (row != Driver.ROW - 1) {
-              save += ", ";
-            }
-          }
-          save += "]";
-          if (col != Driver.COL - 1) {
-            save += ", ";
-          }
-        }
-        save += "}";
-        try {
-          FileWriter writer = new FileWriter("save.txt");
-          writer.write(save);
-          writer.close();
-        } catch (IOException e) {
-          JOptionPane.showMessageDialog(null, "Cannot access save.txt", "Error",
-              JOptionPane.ERROR_MESSAGE);
-        }
+        txtCompileHelp(false, Driver.getRow(), Driver.getCol(), Driver.getMineCount(), coveredMine,
+            time, tile);
       }
-      gameState = alive;
+      gameState = tempState;
     }
     // handle load game:
-    Scanner reader;
-    String save = "";
     try {
-      reader = new Scanner(new File("save.txt"));
-      save = reader.nextLine();
-      reader.close();
-    } catch (FileNotFoundException e) {
-      JOptionPane.showMessageDialog(null, "Cannot find save.txt", "Error",
+      Object[] saved = txtParseHelp();
+      if (mouseX > Driver.getRow() * 16 + 210 && mouseX < Driver.getRow() * 16 + 415 && mouseY > 194
+          && mouseY < 257 && mousePressed == true && ((boolean) saved[0]) == false) {
+        loadBtnHighlight = true;
+      } else {
+        loadBtnHighlight = false;
+      }
+      if ((key == 'l' || key == 'L'
+          || mouseX > Driver.getRow() * 16 + 210 && mouseX < Driver.getRow() * 16 + 415
+              && mouseY > 194 && mouseY < 257 && mouseReleased == true)
+          && ((boolean) saved[0]) == false) {
+        int tempState = gameState;
+        gameState = paused;
+        int input;
+        String message = "Progress of this game will be lost if not saved" + System.lineSeparator()
+            + "Do you want to proceed?";
+        input = JOptionPane.showConfirmDialog(null, message, "Confirmation",
+            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (input == 0) {
+          txtCompileHelp(true, (int) saved[1], (int) saved[2], (int) saved[3], (int) saved[4],
+              (int) saved[5], (Tile[][]) saved[6]);
+          processing.exit();
+          File jar = new File("mines.jar");
+          try {
+            Desktop.getDesktop().open(jar);
+          } catch (IOException e) {
+            JOptionPane.showMessageDialog(null,
+                "Error 200" + System.lineSeparator() + "Cannot launch mines.jar", "File Missing",
+                JOptionPane.ERROR_MESSAGE);
+          }
+        } else {
+          gameState = tempState;
+        }
+      }
+    } catch (IOException e) {
+      JOptionPane.showMessageDialog(null,
+          "ERROR 100" + System.lineSeparator() + "Cannot parse save.txt", "File Corruption",
           JOptionPane.ERROR_MESSAGE);
     }
-    if (mouseX > Driver.ROW * 16 + 210 && mouseX < Driver.ROW * 16 + 415 && mouseY > 194
-        && mouseY < 257 && mousePressed == true && save.length() > 1) {
-      loadBtnHighlight = true;
-    } else {
-      loadBtnHighlight = false;
-    }
-    if ((key == 'l' || key == 'L' || mouseX > Driver.ROW * 16 + 210
-        && mouseX < Driver.ROW * 16 + 415 && mouseY > 194 && mouseY < 257 && mouseReleased == true)
-        && save.length() > 1) {
-      gameState = paused;
-      int input;
-      String message = "Progress of this game will be lost if not saved" + System.lineSeparator()
-          + "Do you want to proceed?";
-      input = JOptionPane.showConfirmDialog(null, message, "Confirmation",
-          JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-      if (input == 0) {
-        save = save.replaceFirst("0", "1");
-        try {
-          FileWriter writer = new FileWriter("save.txt");
-          writer.write(save);
-          writer.close();
-        } catch (IOException e) {
-          JOptionPane.showMessageDialog(null, "Cannot access save.txt", "Error",
-              JOptionPane.ERROR_MESSAGE);
-        }
-        processing.exit();
-        File jar = new File("mines.jar");
-        try {
-          Desktop.getDesktop().open(jar);
-        } catch (IOException e) {
-          JOptionPane.showMessageDialog(null, "Cannot launch mines.jar", "Error",
-              JOptionPane.ERROR_MESSAGE);
-        }
-      } else {
-        gameState = alive;
-      }
-    }
     // toggle game control mode:
-    if (mouseX > Driver.ROW * 16 && mouseX < Driver.ROW * 16 + 418 && mouseY > 255 && mouseY < 321
-        && mousePressed == true) {
+    if (mouseX > Driver.getRow() * 16 && mouseX < Driver.getRow() * 16 + 418 && mouseY > 255
+        && mouseY < 321 && mousePressed == true) {
       ctrlToggleHighlight = true;
     } else {
       ctrlToggleHighlight = false;
     }
-    if (key == 'c' || key == 'C' || mouseX > Driver.ROW * 16 && mouseX < Driver.ROW * 16 + 418
-        && mouseY > 255 && mouseY < 321 && mouseReleased == true) {
+    if (key == 'c' || key == 'C'
+        || mouseX > Driver.getRow() * 16 && mouseX < Driver.getRow() * 16 + 418 && mouseY > 255
+            && mouseY < 321 && mouseReleased == true) {
       if (gameMode.equals(keyboard)) {
         gameMode = mouse;
       } else {
         gameMode = keyboard;
       }
-      for (int r = 0; r < Driver.ROW; r++) {
-        for (int c = 0; c < Driver.COL; c++) {
+      for (int r = 0; r < Driver.getRow(); r++) {
+        for (int c = 0; c < Driver.getCol(); c++) {
           tile[r][c].setIsHighlighted(false);
         }
       }
     }
     // toggle highlight:
-    if (mouseX > Driver.ROW * 16 && mouseX < Driver.ROW * 16 + 418 && mouseY > 320 && mouseY < 385
-        && mousePressed == true) {
+    if (mouseX > Driver.getRow() * 16 && mouseX < Driver.getRow() * 16 + 418 && mouseY > 320
+        && mouseY < 385 && mousePressed == true) {
       highlightToggleHighlight = true;
     } else {
       highlightToggleHighlight = false;
     }
-    if (key == 'h' || key == 'H' || mouseX > Driver.ROW * 16 && mouseX < Driver.ROW * 16 + 418
-        && mouseY > 320 && mouseY < 385 && mouseReleased == true) {
+    if (key == 'h' || key == 'H'
+        || mouseX > Driver.getRow() * 16 && mouseX < Driver.getRow() * 16 + 418 && mouseY > 320
+            && mouseY < 385 && mouseReleased == true) {
       if (highlightIsOn == true) {
         highlightIsOn = false;
-        for (int r = 0; r < Driver.ROW; r++) {
-          for (int c = 0; c < Driver.COL; c++) {
+        for (int r = 0; r < Driver.getRow(); r++) {
+          for (int c = 0; c < Driver.getCol(); c++) {
             tile[r][c].setIsHighlighted(false);
           }
         }
@@ -552,48 +481,48 @@ public class Minesweeper {
       if ((key == 'a' || key == 'A') && curLoc[0] > 0) {
         curLoc[0] -= 1;
       }
-      if ((key == 's' || key == 'S') && curLoc[1] < Driver.COL - 1) {
+      if ((key == 's' || key == 'S') && curLoc[1] < Driver.getCol() - 1) {
         curLoc[1] += 1;
       }
-      if ((key == 'd' || key == 'D') && curLoc[0] < Driver.ROW - 1) {
+      if ((key == 'd' || key == 'D') && curLoc[0] < Driver.getRow() - 1) {
         curLoc[0] += 1;
       }
-      for (int r = 0; r < Driver.ROW; r++) {
-        for (int c = 0; c < Driver.COL; c++) {
+      for (int r = 0; r < Driver.getRow(); r++) {
+        for (int c = 0; c < Driver.getCol(); c++) {
           tile[r][c].setIsHighlighted(false);
         }
       }
       tile[curLoc[0]][curLoc[1]].setIsHighlighted(true);
       if (highlightIsOn) {
-        if (tile[curLoc[0]][curLoc[1]].getState() == Display.UNCOVERED) {
+        if (tile[curLoc[0]][curLoc[1]].getDisplay() == Display.UNCOVERED) {
           int neighbor[][] = neighbors(curLoc[0], curLoc[1]);
           for (int i = 0; i < 8; i++) {
             if (neighbor[i][0] != -1
-                && (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.COVERED
-                    || tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.FLAG)) {
+                && (tile[neighbor[i][0]][neighbor[i][1]].getDisplay() == Display.COVERED
+                    || tile[neighbor[i][0]][neighbor[i][1]].getDisplay() == Display.FLAG)) {
               tile[neighbor[i][0]][neighbor[i][1]].setIsHighlighted(true);
             }
           }
         }
       }
     }
-    if (highlightIsOn && gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.ROW * 16 + 1
-        && mouseY > 0 && mouseY < Driver.COL * 16 + 1 && mousePressed == true
+    if (highlightIsOn && gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.getRow() * 16 + 1
+        && mouseY > 0 && mouseY < Driver.getCol() * 16 + 1 && mousePressed == true
         && mouseButton == 37) {
-      for (int r = 0; r < Driver.ROW; r++) {
-        for (int c = 0; c < Driver.COL; c++) {
+      for (int r = 0; r < Driver.getRow(); r++) {
+        for (int c = 0; c < Driver.getCol(); c++) {
           tile[r][c].setIsHighlighted(false);
         }
       }
       int row = (mouseX - 1) / 16;
       int col = (mouseY - 1) / 16;
       tile[row][col].setIsHighlighted(true);
-      if (tile[row][col].getState() == Display.UNCOVERED) {
+      if (tile[row][col].getDisplay() == Display.UNCOVERED) {
         int neighbor[][] = neighbors(row, col);
         for (int i = 0; i < 8; i++) {
           if (neighbor[i][0] != -1
-              && (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.COVERED
-                  || tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.FLAG)) {
+              && (tile[neighbor[i][0]][neighbor[i][1]].getDisplay() == Display.COVERED
+                  || tile[neighbor[i][0]][neighbor[i][1]].getDisplay() == Display.FLAG)) {
             tile[neighbor[i][0]][neighbor[i][1]].setIsHighlighted(true);
           }
         }
@@ -607,7 +536,7 @@ public class Minesweeper {
             gameState = alive;
             uncoverHelp(curLoc[0], curLoc[1]);
             try {
-              timer.scheduleAtFixedRate(task, 0, 1000);
+              timer.scheduleAtFixedRate(task, 0, 1);
             } catch (IllegalStateException e) {
               time = 0;
             }
@@ -618,8 +547,8 @@ public class Minesweeper {
           }
         }
       }
-      if (gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.ROW * 16 + 1 && mouseY > 0
-          && mouseY < Driver.COL * 16 + 1) {
+      if (gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.getRow() * 16 + 1 && mouseY > 0
+          && mouseY < Driver.getCol() * 16 + 1) {
         int row = (mouseX - 1) / 16;
         int col = (mouseY - 1) / 16;
         if (mouseReleased == true && mouseButton == 37) {
@@ -627,7 +556,7 @@ public class Minesweeper {
             gameState = alive;
             uncoverHelp(row, col);
             try {
-              timer.scheduleAtFixedRate(task, 0, 1000);
+              timer.scheduleAtFixedRate(task, 0, 1);
             } catch (IllegalStateException e) {
               time = 0;
             }
@@ -644,15 +573,15 @@ public class Minesweeper {
       int foundMine = 0;
       int wrongMine = 0;
       int coveredTile = 0;
-      for (int r = 0; r < Driver.ROW; r++) {
-        for (int c = 0; c < Driver.COL; c++) {
-          if (tile[r][c].getState() == Display.FLAG && tile[r][c].getKey() == 9) {
+      for (int r = 0; r < Driver.getRow(); r++) {
+        for (int c = 0; c < Driver.getCol(); c++) {
+          if (tile[r][c].getDisplay() == Display.FLAG && tile[r][c].getKey() == 9) {
             foundMine += 1;
           }
-          if (tile[r][c].getState() == Display.FLAG && tile[r][c].getKey() != 9) {
+          if (tile[r][c].getDisplay() == Display.FLAG && tile[r][c].getKey() != 9) {
             wrongMine += 1;
           }
-          if (tile[r][c].getState() == Display.COVERED) {
+          if (tile[r][c].getDisplay() == Display.COVERED) {
             coveredTile += 1;
           }
         }
@@ -660,38 +589,38 @@ public class Minesweeper {
       // process flagging and uncovering:
       if (gameMode.equals(keyboard)) {
         if ((key == 'k' || key == 'K')
-            && tile[curLoc[0]][curLoc[1]].getState() == Display.COVERED) {
-          tile[curLoc[0]][curLoc[1]].setState(Display.FLAG);
+            && tile[curLoc[0]][curLoc[1]].getDisplay() == Display.COVERED) {
+          tile[curLoc[0]][curLoc[1]].setDisplay(Display.FLAG);
           coveredMine -= 1;
         }
-        if ((key == 'l' || key == 'L') && tile[curLoc[0]][curLoc[1]].getState() == Display.FLAG) {
-          tile[curLoc[0]][curLoc[1]].setState(Display.COVERED);
+        if ((key == 'l' || key == 'L') && tile[curLoc[0]][curLoc[1]].getDisplay() == Display.FLAG) {
+          tile[curLoc[0]][curLoc[1]].setDisplay(Display.COVERED);
           coveredMine += 1;
         }
         if (key == 'j' || key == 'J') {
           uncoverHelp(curLoc[0], curLoc[1]);
         }
       }
-      if (gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.ROW * 16 + 1 && mouseY > 0
-          && mouseY < Driver.COL * 16 + 1) {
+      if (gameMode.equals(mouse) && mouseX > 0 && mouseX < Driver.getRow() * 16 + 1 && mouseY > 0
+          && mouseY < Driver.getCol() * 16 + 1) {
         int row = (mouseX - 1) / 16;
         int col = (mouseY - 1) / 16;
         if (mouseReleased == true && mouseButton == 39
-            && tile[row][col].getState() == Display.COVERED) {
-          tile[row][col].setState(Display.FLAG);
+            && tile[row][col].getDisplay() == Display.COVERED) {
+          tile[row][col].setDisplay(Display.FLAG);
           coveredMine -= 1;
-          for (int r = 0; r < Driver.ROW; r++) {
-            for (int c = 0; c < Driver.COL; c++) {
+          for (int r = 0; r < Driver.getRow(); r++) {
+            for (int c = 0; c < Driver.getCol(); c++) {
               tile[r][c].setIsHighlighted(false);
             }
           }
         }
         if (mouseReleased == true && mouseButton == 3
-            && tile[row][col].getState() == Display.FLAG) {
-          tile[row][col].setState(Display.COVERED);
+            && tile[row][col].getDisplay() == Display.FLAG) {
+          tile[row][col].setDisplay(Display.COVERED);
           coveredMine += 1;
-          for (int r = 0; r < Driver.ROW; r++) {
-            for (int c = 0; c < Driver.COL; c++) {
+          for (int r = 0; r < Driver.getRow(); r++) {
+            for (int c = 0; c < Driver.getCol(); c++) {
               tile[r][c].setIsHighlighted(false);
             }
           }
@@ -701,33 +630,35 @@ public class Minesweeper {
         }
       }
       // test for victory:
-      if ((foundMine == Driver.MINE_COUNT || coveredTile == Driver.MINE_COUNT - foundMine)
+      if ((foundMine == Driver.getMineCount() || coveredTile == Driver.getMineCount() - foundMine)
           && wrongMine == 0) {
         gameState = victory;
       }
       // prepare game result:
       if (gameState == victory) {
         coveredMine = 0;
-        for (int r = 0; r < Driver.ROW; r++) {
-          for (int c = 0; c < Driver.COL; c++) {
+        for (int r = 0; r < Driver.getRow(); r++) {
+          for (int c = 0; c < Driver.getCol(); c++) {
             if (tile[r][c].getKey() != 9) {
-              tile[r][c].setState(Display.UNCOVERED);
+              tile[r][c].setDisplay(Display.UNCOVERED);
             }
             if (tile[r][c].getKey() == 9) {
-              tile[r][c].setState(Display.FLAG);
+              tile[r][c].setDisplay(Display.FLAG);
             }
           }
         }
       }
       if (gameState == gameOver) {
-        coveredMine = Driver.MINE_COUNT - foundMine;
-        for (int r = 0; r < Driver.ROW; r++) {
-          for (int c = 0; c < Driver.COL; c++) {
-            if (tile[r][c].getState() == Display.FLAG && tile[r][c].getKey() != 9) {
-              tile[r][c].setState(Display.BAD_FLAG);
-            } else if (tile[r][c].getState() != Display.FLAG
-                && tile[r][c].getState() != Display.TRIGGERED_MINE) {
-              tile[r][c].setState(Display.UNCOVERED);
+        coveredMine = Driver.getMineCount() - foundMine;
+        for (int r = 0; r < Driver.getRow(); r++) {
+          for (int c = 0; c < Driver.getCol(); c++) {
+            if (tile[r][c].getDisplay() == Display.FLAG && tile[r][c].getKey() != 9) {
+              tile[r][c].setDisplay(Display.BAD_FLAG);
+            } else if (tile[r][c].getDisplay() == Display.COVERED && tile[r][c].getKey() == 9) {
+              tile[r][c].setDisplay(Display.MINE);
+            } else if (tile[r][c].getDisplay() != Display.FLAG
+                && tile[r][c].getDisplay() != Display.TRIGGERED_MINE) {
+              tile[r][c].setDisplay(Display.UNCOVERED);
             }
           }
         }
@@ -762,23 +693,23 @@ public class Minesweeper {
       output[1][0] = row - 1;
       output[1][1] = col;
     }
-    if (row > 0 && col < Driver.COL - 1) {
+    if (row > 0 && col < Driver.getCol() - 1) {
       output[2][0] = row - 1;
       output[2][1] = col + 1;
     }
-    if (col < Driver.COL - 1) {
+    if (col < Driver.getCol() - 1) {
       output[3][0] = row;
       output[3][1] = col + 1;
     }
-    if (row < Driver.ROW - 1 && col < Driver.COL - 1) {
+    if (row < Driver.getRow() - 1 && col < Driver.getCol() - 1) {
       output[4][0] = row + 1;
       output[4][1] = col + 1;
     }
-    if (row < Driver.ROW - 1) {
+    if (row < Driver.getRow() - 1) {
       output[5][0] = row + 1;
       output[5][1] = col;
     }
-    if (row < Driver.ROW - 1 && col > 0) {
+    if (row < Driver.getRow() - 1 && col > 0) {
       output[6][0] = row + 1;
       output[6][1] = col - 1;
     }
@@ -802,19 +733,19 @@ public class Minesweeper {
       return;
     }
     // uncover a single tile:
-    if (tile[row][col].getKey() != 9 && tile[row][col].getState() != Display.FLAG) {
-      tile[row][col].setState(Display.UNCOVERED);
+    if (tile[row][col].getKey() != 9 && tile[row][col].getDisplay() != Display.FLAG) {
+      tile[row][col].setDisplay(Display.UNCOVERED);
     }
-    if (tile[row][col].getKey() == 9 && tile[row][col].getState() == Display.COVERED) {
+    if (tile[row][col].getKey() == 9 && tile[row][col].getDisplay() == Display.COVERED) {
       gameState = gameOver;
-      tile[row][col].setState(Display.TRIGGERED_MINE);
+      tile[row][col].setDisplay(Display.TRIGGERED_MINE);
     }
     // base case, all neighbors uncovered:
     int neighbor[][] = neighbors(row, col);
     int coveredNeighbor = 0;
     for (int i = 0; i < 8; i++) {
       if (neighbor[i][0] != -1) {
-        if (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.COVERED) {
+        if (tile[neighbor[i][0]][neighbor[i][1]].getDisplay() == Display.COVERED) {
           coveredNeighbor += 1;
         }
       }
@@ -823,32 +754,32 @@ public class Minesweeper {
       return;
     }
     // recursive call and uncover all neighbors around the tile:
-    if (tile[row][col].getState() == Display.UNCOVERED) {
+    if (tile[row][col].getDisplay() == Display.UNCOVERED) {
       int count = 0;
       for (int i = 0; i < 8; i++) {
         if (neighbor[i][0] != -1
-            && tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.FLAG) {
+            && tile[neighbor[i][0]][neighbor[i][1]].getDisplay() == Display.FLAG) {
           count += 1;
         }
       }
       if (count == this.tile[row][col].getKey()) {
         for (int i = 0; i < 8; i++) {
           if (neighbor[i][0] != -1) {
-            if (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.FLAG
+            if (tile[neighbor[i][0]][neighbor[i][1]].getDisplay() == Display.FLAG
                 && tile[neighbor[i][0]][neighbor[i][1]].getKey() != 9) {
               gameState = gameOver;
             }
-            if (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.COVERED
+            if (tile[neighbor[i][0]][neighbor[i][1]].getDisplay() == Display.COVERED
                 && tile[neighbor[i][0]][neighbor[i][1]].getKey() != 9) {
-              tile[neighbor[i][0]][neighbor[i][1]].setState(Display.UNCOVERED);
+              tile[neighbor[i][0]][neighbor[i][1]].setDisplay(Display.UNCOVERED);
               if (tile[neighbor[i][0]][neighbor[i][1]].getKey() == 0) {
                 uncoverHelp(neighbor[i][0], neighbor[i][1]);
               }
             }
-            if (tile[neighbor[i][0]][neighbor[i][1]].getState() == Display.COVERED
+            if (tile[neighbor[i][0]][neighbor[i][1]].getDisplay() == Display.COVERED
                 && tile[neighbor[i][0]][neighbor[i][1]].getKey() == 9) {
               gameState = gameOver;
-              tile[neighbor[i][0]][neighbor[i][1]].setState(Display.TRIGGERED_MINE);
+              tile[neighbor[i][0]][neighbor[i][1]].setDisplay(Display.TRIGGERED_MINE);
             }
           }
         }
@@ -865,114 +796,261 @@ public class Minesweeper {
   }
 
   /**
+   * Compiles data of game progress into a single string before writing it onto save.txt,
+   * overwriting anything on the file.
+   * 
+   * @param loadGame     - true if game is to be loaded now, false if otherwise
+   * @param rowLength    - length of each row
+   * @param columnLength - length of each column
+   * @param totalMines   - total number of mines
+   * @param minesLeft    - number of covered mines
+   * @param timeElapsed  - value on the timer when game is saved
+   * @param tile         - the tile array when game is saved
+   */
+  public static void txtCompileHelp(boolean loadGame, int rowLength, int columnLength, int totalMines,
+      int minesLeft, int timeElapsed, Tile[][] tile) {
+    String output = "";
+    if (loadGame) {
+      output += "LOAD GAME = " + "true" + ";" + System.lineSeparator();
+    } else {
+      output += "LOAD GAME = " + "false" + ";" + System.lineSeparator();
+    }
+    output += "ROW LENGTH = " + new Integer(rowLength).toString() + ";" + System.lineSeparator();
+    output +=
+        "COLUMN LENGTH = " + new Integer(columnLength).toString() + ";" + System.lineSeparator();
+    output += "TOTAL MINES = " + new Integer(totalMines).toString() + ";" + System.lineSeparator();
+    output += "MINES LEFT = " + new Integer(minesLeft).toString() + ";" + System.lineSeparator();
+    output +=
+        "TIME ELAPSED = " + new Integer(timeElapsed).toString() + ";" + System.lineSeparator();
+    for (int row = 0; row < rowLength; row++) {
+      for (int col = 0; col < columnLength; col++) {
+        output += "(" + new Integer(row).toString() + ":" + new Integer(col).toString() + ":"
+            + new Integer(tile[row][col].getKey()).toString() + ":"
+            + tile[row][col].getDisplay().toString() + ")";
+        if (col != columnLength - 1 || row != rowLength - 1) {
+          output += ", ";
+        } else {
+          output += ";";
+        }
+      }
+    }
+    FileWriter writer;
+    try {
+      writer = new FileWriter("save.txt");
+      writer.write(output);
+      writer.close();
+    } catch (IOException e) {
+      JOptionPane.showMessageDialog(null,
+          "Error 110" + System.lineSeparator() + "Cannot find or access save.txt", "File Error",
+          JOptionPane.ERROR_MESSAGE);
+    }
+  }
+
+  /**
+   * Reads saves.txt and parse it into lines before returning data embedded within each line in the
+   * form of an Object array. Items in the array needs to be casted into their respective type
+   * before using.
+   * 
+   * @return a String array of embedded data, by line
+   * @throws IOException when save.txt is corrupted
+   */
+  public static Object[] txtParseHelp() throws IOException {
+    Scanner scanner;
+    Object[] output = new Object[7];
+    try {
+      scanner = new Scanner(new File("save.txt"));
+      for (int line = 0; line < 7; line++) {
+        output[line] = scanner.nextLine();
+      }
+      scanner.close();
+    } catch (NoSuchElementException e) {
+      if (((String) output[0]).equals("0")) {
+        Object[] outputNull = new Object[1];
+        outputNull[0] = false;
+        return outputNull;
+      } else {
+        throw new IOException();
+      }
+    } catch (FileNotFoundException e) {
+      JOptionPane.showMessageDialog(null,
+          "Error 120" + System.lineSeparator() + "Cannot find save.txt", "File Not Found",
+          JOptionPane.ERROR_MESSAGE);
+    }
+    String line0 = (String) output[0];
+    if (line0.substring(12, 16).equals("true")) {
+      output[0] = true;
+    } else if (line0.substring(12, 17).equals("false")) {
+      output[0] = false;
+    } else {
+      throw new IOException();
+    }
+    try {
+      String line1 = (String) output[1];
+      output[1] =
+          (int) Integer.parseInt(line1.substring(line1.indexOf("=") + 2, line1.indexOf(";")));
+      String line2 = (String) output[2];
+      output[2] =
+          (int) Integer.parseInt(line2.substring(line2.indexOf("=") + 2, line2.indexOf(";")));
+      String line3 = (String) output[3];
+      output[3] =
+          (int) Integer.parseInt(line3.substring(line3.indexOf("=") + 2, line3.indexOf(";")));
+      String line4 = (String) output[4];
+      output[4] =
+          (int) Integer.parseInt(line4.substring(line4.indexOf("=") + 2, line4.indexOf(";")));
+      String line5 = (String) output[5];
+      output[5] =
+          (int) Integer.parseInt(line5.substring(line5.indexOf("=") + 2, line5.indexOf(";")));
+    } catch (NumberFormatException e) {
+      throw new IOException();
+    }
+    for (int line = 1; line < 6; line++) {
+      if ((int) output[line] < 1) {
+        throw new IOException();
+      }
+    }
+    try {
+      String line6 = (String) output[6];
+      String[] savedGame = line6.substring(0, line6.indexOf(";")).split(", ");
+      Tile[][] saved = new Tile[(int) output[1]][(int) output[2]];
+      for (int row = 0; row < (int) output[1]; row++) {
+        for (int col = 0; col < (int) output[2]; col++) {
+          saved[row][col] = new Tile();
+        }
+      }
+      for (int i = 0; i < savedGame.length; i++) {
+        savedGame[i] = savedGame[i].substring(1, savedGame[i].length() - 1);
+        String[] savedTile = savedGame[i].split(":");
+        int row = Integer.parseInt(savedTile[0]);
+        int col = Integer.parseInt(savedTile[1]);
+        int key = Integer.parseInt(savedTile[2]);
+        saved[row][col].setKey(key);
+        saved[row][col].setDisplay(Display.valueOf(savedTile[3]));
+        output[6] = saved;
+      }
+    } catch (ArrayIndexOutOfBoundsException e) {
+      throw new IOException();
+    }
+    for (int row = 0; row < (int) output[1]; row++) {
+      for (int col = 0; col < (int) output[2]; col++) {
+        if (((Tile[][]) output[6])[row][col].getKey() == -1) {
+          throw new IOException();
+        }
+      }
+    }
+    return output;
+  }
+
+  /**
    * continuously output the current game progress, displays each individual tile game board
    * according to its displayed state.
    */
   private void draw() {
     // display panel:
-    processing.image(panel, Driver.ROW * 16 + 1, 1);
+    processing.image(panel, Driver.getRow() * 16 + 1, 1);
     // display counter:
     if (coveredMine > -1 && coveredMine < 10000) {
-      processing.image(panel_num[coveredMine / 1000], Driver.ROW * 16 + 65, 10);
-      processing.image(panel_num[coveredMine % 1000 / 100], Driver.ROW * 16 + 92, 10);
-      processing.image(panel_num[coveredMine % 100 / 10], Driver.ROW * 16 + 119, 10);
-      processing.image(panel_num[coveredMine % 10], Driver.ROW * 16 + 146, 10);
+      processing.image(panel_num[coveredMine / 1000], Driver.getRow() * 16 + 65, 10);
+      processing.image(panel_num[coveredMine % 1000 / 100], Driver.getRow() * 16 + 92, 10);
+      processing.image(panel_num[coveredMine % 100 / 10], Driver.getRow() * 16 + 119, 10);
+      processing.image(panel_num[coveredMine % 10], Driver.getRow() * 16 + 146, 10);
     } else if (-1 * coveredMine / 1000 == 0) {
-      processing.image(panel_negative, Driver.ROW * 16 + 65, 10);
-      processing.image(panel_num[-1 * coveredMine % 1000 / 100], Driver.ROW * 16 + 92, 10);
-      processing.image(panel_num[-1 * coveredMine % 100 / 10], Driver.ROW * 16 + 119, 10);
-      processing.image(panel_num[-1 * coveredMine % 10], Driver.ROW * 16 + 146, 10);
+      processing.image(panel_negative, Driver.getRow() * 16 + 65, 10);
+      processing.image(panel_num[-1 * coveredMine % 1000 / 100], Driver.getRow() * 16 + 92, 10);
+      processing.image(panel_num[-1 * coveredMine % 100 / 10], Driver.getRow() * 16 + 119, 10);
+      processing.image(panel_num[-1 * coveredMine % 10], Driver.getRow() * 16 + 146, 10);
     } else {
-      processing.image(panel_negative, Driver.ROW * 16 + 65, 10);
-      processing.image(panel_negative, Driver.ROW * 16 + 92, 10);
-      processing.image(panel_negative, Driver.ROW * 16 + 119, 10);
-      processing.image(panel_negative, Driver.ROW * 16 + 146, 10);
+      processing.image(panel_negative, Driver.getRow() * 16 + 65, 10);
+      processing.image(panel_negative, Driver.getRow() * 16 + 92, 10);
+      processing.image(panel_negative, Driver.getRow() * 16 + 119, 10);
+      processing.image(panel_negative, Driver.getRow() * 16 + 146, 10);
     }
     // display timer:
-    if (time < 10000) {
-      processing.image(panel_num[time / 1000], Driver.ROW * 16 + 302, 10);
-      processing.image(panel_num[time % 1000 / 100], Driver.ROW * 16 + 329, 10);
-      processing.image(panel_num[time % 100 / 10], Driver.ROW * 16 + 356, 10);
-      processing.image(panel_num[time % 10], Driver.ROW * 16 + 383, 10);
+    int t = time / 1000;
+    if (t < 10000) {
+      processing.image(panel_num[t / 1000], Driver.getRow() * 16 + 302, 10);
+      processing.image(panel_num[t % 1000 / 100], Driver.getRow() * 16 + 329, 10);
+      processing.image(panel_num[t % 100 / 10], Driver.getRow() * 16 + 356, 10);
+      processing.image(panel_num[t % 10], Driver.getRow() * 16 + 383, 10);
     } else {
-      processing.image(panel_negative, Driver.ROW * 16 + 302, 10);
-      processing.image(panel_negative, Driver.ROW * 16 + 329, 10);
-      processing.image(panel_negative, Driver.ROW * 16 + 356, 10);
-      processing.image(panel_negative, Driver.ROW * 16 + 383, 10);
+      processing.image(panel_negative, Driver.getRow() * 16 + 302, 10);
+      processing.image(panel_negative, Driver.getRow() * 16 + 329, 10);
+      processing.image(panel_negative, Driver.getRow() * 16 + 356, 10);
+      processing.image(panel_negative, Driver.getRow() * 16 + 383, 10);
     }
     // display panel components:
     if (newGameBtnHighlight) {
-      processing.image(new_game_btn_highlight, Driver.ROW * 16 + 4, 65);
+      processing.image(new_game_btn_highlight, Driver.getRow() * 16 + 4, 65);
     }
     if (menuBtnHighlight) {
-      processing.image(menu_btn_highlight, Driver.ROW * 16 + 211, 65);
+      processing.image(menu_btn_highlight, Driver.getRow() * 16 + 211, 65);
     }
     if (pauseBtnHighlight) {
-      processing.image(pause_btn_highlight, Driver.ROW * 16 + 4, 130);
+      processing.image(pause_btn_highlight, Driver.getRow() * 16 + 4, 130);
     }
     if (saveBtnHighlight) {
-      processing.image(save_btn_highlight, Driver.ROW * 16 + 4, 195);
+      processing.image(save_btn_highlight, Driver.getRow() * 16 + 4, 195);
     }
     if (loadBtnHighlight) {
-      processing.image(load_btn_highlight, Driver.ROW * 16 + 211, 195);
+      processing.image(load_btn_highlight, Driver.getRow() * 16 + 211, 195);
     }
     if (gameMode.equals(mouse)) {
       if (ctrlToggleHighlight) {
-        processing.image(toggle_up_pressed, Driver.ROW * 16 + 10, 269);
+        processing.image(toggle_up_pressed, Driver.getRow() * 16 + 10, 269);
       } else {
-        processing.image(toggle_up, Driver.ROW * 16 + 10, 269);
+        processing.image(toggle_up, Driver.getRow() * 16 + 10, 269);
       }
     }
     if (gameMode.equals(keyboard)) {
       if (ctrlToggleHighlight) {
-        processing.image(toggle_dn_pressed, Driver.ROW * 16 + 10, 269);
+        processing.image(toggle_dn_pressed, Driver.getRow() * 16 + 10, 269);
       } else {
-        processing.image(toggle_dn, Driver.ROW * 16 + 10, 269);
+        processing.image(toggle_dn, Driver.getRow() * 16 + 10, 269);
       }
     }
     if (highlightIsOn) {
       if (highlightToggleHighlight) {
-        processing.image(toggle_dn_pressed, Driver.ROW * 16 + 10, 333);
+        processing.image(toggle_dn_pressed, Driver.getRow() * 16 + 10, 333);
       } else {
-        processing.image(toggle_dn, Driver.ROW * 16 + 10, 333);
+        processing.image(toggle_dn, Driver.getRow() * 16 + 10, 333);
       }
     } else {
       if (highlightToggleHighlight) {
-        processing.image(toggle_up_pressed, Driver.ROW * 16 + 10, 333);
+        processing.image(toggle_up_pressed, Driver.getRow() * 16 + 10, 333);
       } else {
-        processing.image(toggle_up, Driver.ROW * 16 + 10, 333);
+        processing.image(toggle_up, Driver.getRow() * 16 + 10, 333);
       }
     }
     // display game board:
-    for (int row = 0; row < Driver.ROW; row++) {
-      for (int col = 0; col < Driver.COL; col++) {
-        if (tile[row][col].getState() == Display.COVERED) {
+    for (int row = 0; row < Driver.getRow(); row++) {
+      for (int col = 0; col < Driver.getCol(); col++) {
+        if (tile[row][col].getDisplay() == Display.COVERED) {
           if (tile[row][col].getIsHighlighted() == false) {
             processing.image(blank, row * 16 + 1, col * 16 + 1);
           } else {
             processing.image(highlighted_blank, row * 16 + 1, col * 16 + 1);
           }
         }
-        if (tile[row][col].getState() == Display.UNCOVERED) {
-          if (tile[row][col].getKey() == 9) {
-            processing.image(mine, row * 16 + 1, col * 16 + 1);
-          } else if (tile[row][col].getIsHighlighted() == false) {
+        if (tile[row][col].getDisplay() == Display.UNCOVERED) {
+          if (tile[row][col].getIsHighlighted() == false) {
             processing.image(num[tile[row][col].getKey()], row * 16 + 1, col * 16 + 1);
           } else {
             processing.image(highlighted_num[tile[row][col].getKey()], row * 16 + 1, col * 16 + 1);
           }
         }
-        if (tile[row][col].getState() == Display.FLAG) {
+        if (tile[row][col].getDisplay() == Display.FLAG) {
           if (tile[row][col].getIsHighlighted() == false) {
             processing.image(flag, row * 16 + 1, col * 16 + 1);
           } else {
             processing.image(highlighted_flag, row * 16 + 1, col * 16 + 1);
           }
         }
-        if (tile[row][col].getState() == Display.TRIGGERED_MINE) {
+        if (tile[row][col].getDisplay() == Display.MINE) {
+          processing.image(mine, row * 16 + 1, col * 16 + 1);
+        }
+        if (tile[row][col].getDisplay() == Display.TRIGGERED_MINE) {
           processing.image(triggered_mine, row * 16 + 1, col * 16 + 1);
         }
-        if (tile[row][col].getState() == Display.BAD_FLAG) {
+        if (tile[row][col].getDisplay() == Display.BAD_FLAG) {
           processing.image(bad_flag, row * 16 + 1, col * 16 + 1);
         }
       }

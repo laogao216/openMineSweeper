@@ -9,7 +9,7 @@ public class Tile {
 
   private int key;
   // 9 if the tile is a mine, otherwise, the tile has 1 ~ 8 neighboring mines
-  private Display state;
+  private Display display;
   // represents the image displayed on this tile
   private boolean isHighlighted;
   // true if tile is highlighted, false if otherwise
@@ -18,7 +18,8 @@ public class Tile {
    * Each tile is constructed to initially display a covered state.
    */
   public Tile() {
-    state = Display.COVERED;
+    key = -1;
+    display = Display.COVERED;
     isHighlighted = false;
   }
 
@@ -45,8 +46,8 @@ public class Tile {
    * 
    * @return displayed state of this tile
    */
-  public Display getState() {
-    return state;
+  public Display getDisplay() {
+    return display;
   }
 
   /**
@@ -54,8 +55,8 @@ public class Tile {
    * 
    * @param state - that this tile displays
    */
-  public void setState(Display state) {
-    this.state = state;
+  public void setDisplay(Display display) {
+    this.display = display;
   }
   
   /**

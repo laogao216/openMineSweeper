@@ -5,7 +5,7 @@ If you haven't played minesweer yet, you can look up its rules and strategies or
 
 ### *For users*
 1. download java [here](https://www.java.com/en/download/) if you haven't
-2. download the Mines_1.2.0.zip file above
+2. download the Mines_1.5.1.zip file above
 3. extract all contents from Mines.zip to a directory of your choice
 4. execute Mines.jar
 

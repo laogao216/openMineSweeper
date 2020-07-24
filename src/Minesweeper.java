@@ -8,11 +8,11 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.swing.JOptionPane;
 import processing.core.PApplet;
 import processing.core.PImage;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * This class processes and executes user inputs passed from Driver.
@@ -157,7 +157,7 @@ public class Minesweeper {
     }
     try {
       Object[] saved = txtParseHelp();
-      if ((boolean) saved[0]) {
+      if ((Boolean) saved[0] != null && (Boolean) saved[0] == true) {
         gameState = paused;
         coveredMine = (int) saved[4];
         time = (int) saved[5];
@@ -261,15 +261,15 @@ public class Minesweeper {
     }
     // show game result:
     if (gameState == victory && endMessageShown == false) {
-      JOptionPane.showMessageDialog(
-          null, "Congratulations, you have finished in " + time / 1000 + " seconds"
+      JOptionPane.showMessageDialog(null,
+          "Congratulations, you have finished in " + time / 1000 + " seconds"
               + System.lineSeparator() + "Thank you for playing!",
           "Game Result", JOptionPane.INFORMATION_MESSAGE);
       endMessageShown = true;
     }
     if (gameState == gameOver && endMessageShown == false) {
-      JOptionPane.showMessageDialog(
-          null, "Better luck next time, you have lasted " + time / 1000 + " seconds"
+      JOptionPane.showMessageDialog(null,
+          "Better luck next time, you have lasted " + time / 1000 + " seconds"
               + System.lineSeparator() + "Thank you for playing!",
           "Game Result", JOptionPane.INFORMATION_MESSAGE);
       endMessageShown = true;
@@ -394,7 +394,8 @@ public class Minesweeper {
     try {
       Object[] saved = txtParseHelp();
       if (mouseX > Driver.getRow() * 16 + 210 && mouseX < Driver.getRow() * 16 + 415 && mouseY > 194
-          && mouseY < 257 && mousePressed == true && ((boolean) saved[0]) == false) {
+          && mouseY < 257 && mousePressed == true && (Boolean) saved[0] != null
+          && (Boolean) saved[0] == false) {
         loadBtnHighlight = true;
       } else {
         loadBtnHighlight = false;
@@ -402,7 +403,7 @@ public class Minesweeper {
       if ((key == 'l' || key == 'L'
           || mouseX > Driver.getRow() * 16 + 210 && mouseX < Driver.getRow() * 16 + 415
               && mouseY > 194 && mouseY < 257 && mouseReleased == true)
-          && ((boolean) saved[0]) == false) {
+          && (Boolean) saved[0] != null && (Boolean) saved[0] == false) {
         int tempState = gameState;
         gameState = paused;
         int input;
@@ -808,8 +809,8 @@ public class Minesweeper {
    * @param timeElapsed  - value on the timer when game is saved
    * @param tile         - the tile array when game is saved
    */
-  public static void txtCompileHelp(boolean loadGame, int rowLength, int columnLength, int totalMines,
-      int minesLeft, int timeElapsed, Tile[][] tile) {
+  public static void txtCompileHelp(boolean loadGame, int rowLength, int columnLength,
+      int totalMines, int minesLeft, int timeElapsed, Tile[][] tile) {
     String output = "";
     if (loadGame) {
       output += "LOAD GAME = " + "true" + ";" + System.lineSeparator();
@@ -867,7 +868,7 @@ public class Minesweeper {
     } catch (NoSuchElementException e) {
       if (((String) output[0]).equals("0")) {
         Object[] outputNull = new Object[1];
-        outputNull[0] = false;
+        outputNull[0] = null;
         return outputNull;
       } else {
         throw new IOException();

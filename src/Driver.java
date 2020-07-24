@@ -23,39 +23,32 @@ public class Driver extends PApplet {
   public static void main(String[] args) {
     try {
       Object[] saved = Minesweeper.txtParseHelp();
-      if ((boolean) saved[0]) {
+      if ((Boolean) saved[0] != null && (Boolean) saved[0] == true) {
         ROW = (int) saved[1];
         COL = (int) saved[2];
         MINE_COUNT = (int) saved[3];
       } else {
-        String[] options = {"Load Saved", "Easy", "Normal", "Hard", "Custimize"};
+        String[] options = {"Easy", "Normal", "Hard", "Custimize", "Load Saved"};
         String message = "Easy: 10*10, 10 mines" + System.lineSeparator()
             + "Normal: 20*20, 60 mines" + System.lineSeparator() + "Hard: 50*50, 500 mines";
         int input = JOptionPane.showOptionDialog(null, message, "Choose Difficulty Level",
-            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[3]);
+            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, "Hard");
         if (input == 0) {
-          ROW = (int) saved[1];
-          COL = (int) saved[2];
-          MINE_COUNT = (int) saved[3];
-          Minesweeper.txtCompileHelp(true, ROW, COL, MINE_COUNT, (int) saved[4], (int) saved[5],
-              (Tile[][]) saved[6]);
-        } else if (input == 1) {
           ROW = 10;
           COL = 10;
           MINE_COUNT = 10;
-        } else if (input == 2) {
+        } else if (input == 1) {
           ROW = 20;
           COL = 20;
           MINE_COUNT = 60;
-        } else if (input == 3) {
+        } else if (input == 2) {
           ROW = 50;
           COL = 50;
           MINE_COUNT = 500;
-        } else if (input == 4) {
+        } else if (input == 3) {
           try {
             int MAX_ROW = (Toolkit.getDefaultToolkit().getScreenSize().width - 416) / 16;
             int MAX_COL = (Toolkit.getDefaultToolkit().getScreenSize().height - 88) / 16;
-            System.out.print(MAX_ROW);
             String rowInput = JOptionPane.showInputDialog(null, "Length of each row",
                 "Customize (1/3)", JOptionPane.QUESTION_MESSAGE);
             ROW = Integer.parseInt(rowInput);
@@ -103,6 +96,19 @@ public class Driver extends PApplet {
             JOptionPane.showMessageDialog(null, errorMessage, "Customize Unsuccessful",
                 JOptionPane.ERROR_MESSAGE);
             return;
+          }
+        } else if (input == 4) {
+          if ((Boolean) saved[0] == null) {
+            JOptionPane.showMessageDialog(null,
+                "ERROR 300" + System.lineSeparator() + "There is no saved game",
+                "Load Unsuccessful", JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
+          } else {
+            ROW = (int) saved[1];
+            COL = (int) saved[2];
+            MINE_COUNT = (int) saved[3];
+            Minesweeper.txtCompileHelp(true, ROW, COL, MINE_COUNT, (int) saved[4], (int) saved[5],
+                (Tile[][]) saved[6]);
           }
         } else {
           return;

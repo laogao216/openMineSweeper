@@ -6,5 +6,7 @@
  * @author laogao216
  */
 public enum Display {
+  
   COVERED, UNCOVERED, MINE, FLAG, TRIGGERED_MINE, BAD_FLAG;
+  
 }

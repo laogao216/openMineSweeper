@@ -76,4 +76,5 @@ public class Tile {
   public void setIsHighlighted(boolean isHighlighted) {
     this.isHighlighted = isHighlighted;
   }
+  
 }
